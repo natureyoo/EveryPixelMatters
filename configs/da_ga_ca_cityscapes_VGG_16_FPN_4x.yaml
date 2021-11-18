@@ -25,6 +25,9 @@ MODEL:
     CENTER_AWARE_WEIGHT: 20
     CENTER_AWARE_TYPE: "ca_feature" # or "ca_loss"
     #
+    COND_CLASS: False
+    COND_REG: False
+    #
     GA_DIS_LAMBDA: 0.01
     CA_DIS_LAMBDA: 0.1
     COND_DIS_LAMBDA: 0.1

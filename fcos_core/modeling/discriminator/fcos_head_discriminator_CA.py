@@ -53,7 +53,6 @@ class FCOSDiscriminator_CA(nn.Module):
         assert grl_applied_domain == 'both' or grl_applied_domain == 'target'
         self.grl_applied_domain = grl_applied_domain
 
-
     def forward(self, feature, target, score_map=None, domain='source'):
         assert target == 0 or target == 1 or target == 0.1 or target == 0.9
         assert domain == 'source' or domain == 'target'

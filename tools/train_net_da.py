@@ -112,35 +112,45 @@ def train(cfg, local_rank, distributed):
                 grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P7,
                 center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
-                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
+                class_align=cfg.MODEL.ADV.COND_CLASS,
+                reg_align=cfg.MODEL.ADV.COND_REG).to(device)
         if cfg.MODEL.ADV.USE_DIS_P6:
             dis_P6_Cond = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P6_NUM_CONVS,
                 grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P6,
                 center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
-                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
+                class_align=cfg.MODEL.ADV.COND_CLASS,
+                reg_align=cfg.MODEL.ADV.COND_REG).to(device)
         if cfg.MODEL.ADV.USE_DIS_P5:
             dis_P5_Cond = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P5_NUM_CONVS,
                 grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P5,
                 center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
-                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
+                class_align=cfg.MODEL.ADV.COND_CLASS,
+                reg_align=cfg.MODEL.ADV.COND_REG).to(device)
         if cfg.MODEL.ADV.USE_DIS_P4:
             dis_P4_Cond = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P4_NUM_CONVS,
                 grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P4,
                 center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
-                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
+                class_align=cfg.MODEL.ADV.COND_CLASS,
+                reg_align=cfg.MODEL.ADV.COND_REG).to(device)
         if cfg.MODEL.ADV.USE_DIS_P3:
             dis_P3_Cond = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P3_NUM_CONVS,
                 grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P3,
                 center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
-                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
+                class_align=cfg.MODEL.ADV.COND_CLASS,
+                reg_align=cfg.MODEL.ADV.COND_REG).to(device)
 
     if cfg.MODEL.ADV.USE_DIS_HEAD:
         if cfg.MODEL.ADV.USE_DIS_P7:
