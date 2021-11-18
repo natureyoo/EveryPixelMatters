@@ -173,6 +173,30 @@ class DetectronCheckpointer(Checkpointer):
             if self.cfg.MODEL.ADV.USE_DIS_P3:
                 data["model_dis_P3_CA"] = self.model["dis_P3_CA"].state_dict()
 
+        if self.cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
+            if self.cfg.MODEL.ADV.USE_DIS_P7:
+                data["model_dis_P7_Cond"] = self.model["dis_P7_Cond"].state_dict()
+            if self.cfg.MODEL.ADV.USE_DIS_P6:
+                data["model_dis_P6_Cond"] = self.model["dis_P6_Cond"].state_dict()
+            if self.cfg.MODEL.ADV.USE_DIS_P5:
+                data["model_dis_P5_Cond"] = self.model["dis_P5_Cond"].state_dict()
+            if self.cfg.MODEL.ADV.USE_DIS_P4:
+                data["model_dis_P4_Cond"] = self.model["dis_P4_Cond"].state_dict()
+            if self.cfg.MODEL.ADV.USE_DIS_P3:
+                data["model_dis_P3_Cond"] = self.model["dis_P3_Cond"].state_dict()
+
+        if self.cfg.MODEL.ADV.USE_DIS_HEAD:
+            if self.cfg.MODEL.ADV.USE_DIS_P7:
+                data["model_dis_P7_HA"] = self.model["dis_P7_HA"].state_dict()
+            if self.cfg.MODEL.ADV.USE_DIS_P6:
+                data["model_dis_P6_HA"] = self.model["dis_P6_HA"].state_dict()
+            if self.cfg.MODEL.ADV.USE_DIS_P5:
+                data["model_dis_P5_HA"] = self.model["dis_P5_HA"].state_dict()
+            if self.cfg.MODEL.ADV.USE_DIS_P4:
+                data["model_dis_P4_HA"] = self.model["dis_P4_HA"].state_dict()
+            if self.cfg.MODEL.ADV.USE_DIS_P3:
+                data["model_dis_P3_HA"] = self.model["dis_P3_HA"].state_dict()
+
         if self.optimizer is not None:
             if self.cfg.MODEL.ADV.USE_DIS_GLOBAL:
                 if self.cfg.MODEL.ADV.USE_DIS_P7:
@@ -198,6 +222,30 @@ class DetectronCheckpointer(Checkpointer):
                 if self.cfg.MODEL.ADV.USE_DIS_P3:
                     data["optimizer_dis_P3_CA"] = self.optimizer["dis_P3_CA"].state_dict()
 
+            if self.cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
+                if self.cfg.MODEL.ADV.USE_DIS_P7:
+                    data["optimizer_dis_P7_Cond"] = self.optimizer["dis_P7_Cond"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P6:
+                    data["optimizer_dis_P6_Cond"] = self.optimizer["dis_P6_Cond"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P5:
+                    data["optimizer_dis_P5_Cond"] = self.optimizer["dis_P5_Cond"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P4:
+                    data["optimizer_dis_P4_Cond"] = self.optimizer["dis_P4_Cond"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P3:
+                    data["optimizer_dis_P3_Cond"] = self.optimizer["dis_P3_Cond"].state_dict()
+
+            if self.cfg.MODEL.ADV.USE_DIS_HEAD:
+                if self.cfg.MODEL.ADV.USE_DIS_P7:
+                    data["optimizer_dis_P7_HA"] = self.optimizer["dis_P7_HA"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P6:
+                    data["optimizer_dis_P6_HA"] = self.optimizer["dis_P6_HA"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P5:
+                    data["optimizer_dis_P5_HA"] = self.optimizer["dis_P5_HA"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P4:
+                    data["optimizer_dis_P4_HA"] = self.optimizer["dis_P4_HA"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P3:
+                    data["optimizer_dis_P3_HA"] = self.optimizer["dis_P3_HA"].state_dict()
+
         if self.scheduler is not None:
             if self.cfg.MODEL.ADV.USE_DIS_GLOBAL:
                 if self.cfg.MODEL.ADV.USE_DIS_P7:
@@ -222,6 +270,30 @@ class DetectronCheckpointer(Checkpointer):
                     data["scheduler_dis_P4_CA"] = self.scheduler["dis_P4_CA"].state_dict()
                 if self.cfg.MODEL.ADV.USE_DIS_P3:
                     data["scheduler_dis_P3_CA"] = self.scheduler["dis_P3_CA"].state_dict()
+
+            if self.cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
+                if self.cfg.MODEL.ADV.USE_DIS_P7:
+                    data["scheduler_dis_P7_Cond"] = self.scheduler["dis_P7_Cond"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P6:
+                    data["scheduler_dis_P6_Cond"] = self.scheduler["dis_P6_Cond"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P5:
+                    data["scheduler_dis_P5_Cond"] = self.scheduler["dis_P5_Cond"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P4:
+                    data["scheduler_dis_P4_Cond"] = self.scheduler["dis_P4_Cond"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P3:
+                    data["scheduler_dis_P3_Cond"] = self.scheduler["dis_P3_Cond"].state_dict()
+
+            if self.cfg.MODEL.ADV.USE_DIS_HEAD:
+                if self.cfg.MODEL.ADV.USE_DIS_P7:
+                    data["scheduler_dis_P7_HA"] = self.scheduler["dis_P7_HA"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P6:
+                    data["scheduler_dis_P6_HA"] = self.scheduler["dis_P6_HA"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P5:
+                    data["scheduler_dis_P5_HA"] = self.scheduler["dis_P5_HA"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P4:
+                    data["scheduler_dis_P4_HA"] = self.scheduler["dis_P4_HA"].state_dict()
+                if self.cfg.MODEL.ADV.USE_DIS_P3:
+                    data["scheduler_dis_P3_HA"] = self.scheduler["dis_P3_HA"].state_dict()
 
         # data.update(kwargs)
 
@@ -272,6 +344,30 @@ class DetectronCheckpointer(Checkpointer):
                         self.optimizer["dis_P4_CA"].load_state_dict(checkpoint.pop("optimizer_dis_P4_CA"))
                     if self.cfg.MODEL.ADV.USE_DIS_P3:
                         self.optimizer["dis_P3_CA"].load_state_dict(checkpoint.pop("optimizer_dis_P3_CA"))
+
+                if self.cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
+                    if self.cfg.MODEL.ADV.USE_DIS_P7:
+                        self.optimizer["dis_P7_Cond"].load_state_dict(checkpoint.pop("optimizer_dis_P7_Cond"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P6:
+                        self.optimizer["dis_P6_Cond"].load_state_dict(checkpoint.pop("optimizer_dis_P6_Cond"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P5:
+                        self.optimizer["dis_P5_Cond"].load_state_dict(checkpoint.pop("optimizer_dis_P5_Cond"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P4:
+                        self.optimizer["dis_P4_Cond"].load_state_dict(checkpoint.pop("optimizer_dis_P4_Cond"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P3:
+                        self.optimizer["dis_P3_Cond"].load_state_dict(checkpoint.pop("optimizer_dis_P3_Cond"))
+
+                if self.cfg.MODEL.ADV.USE_DIS_HEAD:
+                    if self.cfg.MODEL.ADV.USE_DIS_P7:
+                        self.optimizer["dis_P7_HA"].load_state_dict(checkpoint.pop("optimizer_dis_P7_HA"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P6:
+                        self.optimizer["dis_P6_HA"].load_state_dict(checkpoint.pop("optimizer_dis_P6_HA"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P5:
+                        self.optimizer["dis_P5_HA"].load_state_dict(checkpoint.pop("optimizer_dis_P5_HA"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P4:
+                        self.optimizer["dis_P4_HA"].load_state_dict(checkpoint.pop("optimizer_dis_P4_HA"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P3:
+                        self.optimizer["dis_P3_HA"].load_state_dict(checkpoint.pop("optimizer_dis_P3_HA"))
             else:
                 self.logger.info(
                     "No optimizer found in the checkpoint. Initializing model from scratch"
@@ -306,6 +402,30 @@ class DetectronCheckpointer(Checkpointer):
                         self.scheduler["dis_P4_CA"].load_state_dict(checkpoint.pop("scheduler_dis_P4_CA"))
                     if self.cfg.MODEL.ADV.USE_DIS_P3:
                         self.scheduler["dis_P3_CA"].load_state_dict(checkpoint.pop("scheduler_dis_P3_CA"))
+
+                if self.cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
+                    if self.cfg.MODEL.ADV.USE_DIS_P7:
+                        self.scheduler["dis_P7_Cond"].load_state_dict(checkpoint.pop("scheduler_dis_P7_Cond"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P6:
+                        self.scheduler["dis_P6_Cond"].load_state_dict(checkpoint.pop("scheduler_dis_P6_Cond"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P5:
+                        self.scheduler["dis_P5_Cond"].load_state_dict(checkpoint.pop("scheduler_dis_P5_Cond"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P4:
+                        self.scheduler["dis_P4_Cond"].load_state_dict(checkpoint.pop("scheduler_dis_P4_Cond"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P3:
+                        self.scheduler["dis_P3_Cond"].load_state_dict(checkpoint.pop("scheduler_dis_P3_Cond"))
+
+                if self.cfg.MODEL.ADV.USE_DIS_HEAD:
+                    if self.cfg.MODEL.ADV.USE_DIS_P7:
+                        self.scheduler["dis_P7_HA"].load_state_dict(checkpoint.pop("scheduler_dis_P7_HA"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P6:
+                        self.scheduler["dis_P6_HA"].load_state_dict(checkpoint.pop("scheduler_dis_P6_HA"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P5:
+                        self.scheduler["dis_P5_HA"].load_state_dict(checkpoint.pop("scheduler_dis_P5_HA"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P4:
+                        self.scheduler["dis_P4_HA"].load_state_dict(checkpoint.pop("scheduler_dis_P4_HA"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P3:
+                        self.scheduler["dis_P3_HA"].load_state_dict(checkpoint.pop("scheduler_dis_P3_HA"))
             else:
                 self.logger.info(
                     "No scheduler found in the checkpoint. Initializing model from scratch"
@@ -337,7 +457,7 @@ class DetectronCheckpointer(Checkpointer):
                         "No global discriminator found in the checkpoint. Initializing model from scratch"
                     )
 
-            if self.cfg.MODEL.ADV.USE_DIS_GLOBAL and load_dis:
+            if self.cfg.MODEL.ADV.USE_DIS_CENTER_AWARE and load_dis:
                 if "model_dis_P3_CA" in checkpoint or "model_dis_P4_CA" in checkpoint or "model_dis_P5_CA" in checkpoint or "model_dis_P6_CA" in checkpoint or "model_dis_P7_CA" in checkpoint:
                     self.logger.info("Center-aware alignment discriminator checkpoint found. Initializing model from the checkpoint")
                     if self.cfg.MODEL.ADV.USE_DIS_P7:
@@ -353,6 +473,42 @@ class DetectronCheckpointer(Checkpointer):
                 else:
                     self.logger.info(
                         "No center-aware discriminator found in the checkpoint. Initializing model from scratch"
+                    )
+
+            if self.cfg.MODEL.ADV.USE_DIS_CONDITIONAL and load_dis:
+                if "model_dis_P3_Cond" in checkpoint or "model_dis_P4_Cond" in checkpoint or "model_dis_P5_Cond" in checkpoint or "model_dis_P6_Cond" in checkpoint or "model_dis_P7_Cond" in checkpoint:
+                    self.logger.info("Conditional alignment discriminator checkpoint found. Initializing model from the checkpoint")
+                    if self.cfg.MODEL.ADV.USE_DIS_P7:
+                        load_state_dict(self.model["dis_P7_Cond"], checkpoint.pop("model_dis_P7_Cond"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P6:
+                        load_state_dict(self.model["dis_P6_Cond"], checkpoint.pop("model_dis_P6_Cond"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P5:
+                        load_state_dict(self.model["dis_P5_Cond"], checkpoint.pop("model_dis_P5_Cond"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P4:
+                        load_state_dict(self.model["dis_P4_Cond"], checkpoint.pop("model_dis_P4_Cond"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P3:
+                        load_state_dict(self.model["dis_P3_Cond"], checkpoint.pop("model_dis_P3_Cond"))
+                else:
+                    self.logger.info(
+                        "No conditional discriminator found in the checkpoint. Initializing model from scratch"
+                    )
+
+            if self.cfg.MODEL.ADV.USE_DIS_HEAD and load_dis:
+                if "model_dis_P3_HA" in checkpoint or "model_dis_P4_HA" in checkpoint or "model_dis_P5_HA" in checkpoint or "model_dis_P6_HA" in checkpoint or "model_dis_P7_HA" in checkpoint:
+                    self.logger.info("Head alignment discriminator checkpoint found. Initializing model from the checkpoint")
+                    if self.cfg.MODEL.ADV.USE_DIS_P7:
+                        load_state_dict(self.model["dis_P7_HA"], checkpoint.pop("model_dis_P7_HA"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P6:
+                        load_state_dict(self.model["dis_P6_HA"], checkpoint.pop("model_dis_P6_HA"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P5:
+                        load_state_dict(self.model["dis_P5_HA"], checkpoint.pop("model_dis_P5_HA"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P4:
+                        load_state_dict(self.model["dis_P4_HA"], checkpoint.pop("model_dis_P4_HA"))
+                    if self.cfg.MODEL.ADV.USE_DIS_P3:
+                        load_state_dict(self.model["dis_P3_HA"], checkpoint.pop("model_dis_P3_HA"))
+                else:
+                    self.logger.info(
+                        "No head discriminator found in the checkpoint. Initializing model from scratch"
                     )
         else:
             # load others, e.g., Imagenet pretrained pkl
