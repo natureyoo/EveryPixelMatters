@@ -317,10 +317,14 @@ _C.MODEL.ADV.USE_DIS_P3 = False
 # global and center-aware alignment
 _C.MODEL.ADV.USE_DIS_GLOBAL = False
 _C.MODEL.ADV.USE_DIS_CENTER_AWARE = False
+_C.MODEL.ADV.USE_DIS_CONDITIONAL = False
+_C.MODEL.ADV.USE_DIS_HEAD = False
 _C.MODEL.ADV.CENTER_AWARE_WEIGHT = 20
 _C.MODEL.ADV.CENTER_AWARE_TYPE = "ca_feature"
 _C.MODEL.ADV.GA_DIS_LAMBDA = 0.01
 _C.MODEL.ADV.CA_DIS_LAMBDA = 0.1
+_C.MODEL.ADV.COND_DIS_LAMBDA = 0.1
+_C.MODEL.ADV.HA_DIS_LAMBDA = 0.1
 _C.MODEL.ADV.GRL_APPLIED_DOMAIN = "both"
 
 # the number of convolutions used in the discriminator
@@ -337,6 +341,20 @@ _C.MODEL.ADV.CA_DIS_P5_NUM_CONVS = 4
 _C.MODEL.ADV.CA_DIS_P4_NUM_CONVS = 4
 _C.MODEL.ADV.CA_DIS_P3_NUM_CONVS = 4
 
+# the number of convolutions used in the conditional discriminator
+_C.MODEL.ADV.COND_DIS_P7_NUM_CONVS = 4
+_C.MODEL.ADV.COND_DIS_P6_NUM_CONVS = 4
+_C.MODEL.ADV.COND_DIS_P5_NUM_CONVS = 4
+_C.MODEL.ADV.COND_DIS_P4_NUM_CONVS = 4
+_C.MODEL.ADV.COND_DIS_P3_NUM_CONVS = 4
+
+# the number of convolutions used in the center-aware discriminator
+_C.MODEL.ADV.HA_DIS_P7_NUM_CONVS = 4
+_C.MODEL.ADV.HA_DIS_P6_NUM_CONVS = 4
+_C.MODEL.ADV.HA_DIS_P5_NUM_CONVS = 4
+_C.MODEL.ADV.HA_DIS_P4_NUM_CONVS = 4
+_C.MODEL.ADV.HA_DIS_P3_NUM_CONVS = 4
+
 # adversarial parameter: GRL weight for global discriminator
 _C.MODEL.ADV.GRL_WEIGHT_P7 = 0.1
 _C.MODEL.ADV.GRL_WEIGHT_P6 = 0.1
@@ -351,6 +369,19 @@ _C.MODEL.ADV.CA_GRL_WEIGHT_P5 = 0.1
 _C.MODEL.ADV.CA_GRL_WEIGHT_P4 = 0.1
 _C.MODEL.ADV.CA_GRL_WEIGHT_P3 = 0.1
 
+# adversarial parameter: GRL weight for conditional discriminator
+_C.MODEL.ADV.COND_GRL_WEIGHT_P7 = 0.1
+_C.MODEL.ADV.COND_GRL_WEIGHT_P6 = 0.1
+_C.MODEL.ADV.COND_GRL_WEIGHT_P5 = 0.1
+_C.MODEL.ADV.COND_GRL_WEIGHT_P4 = 0.1
+_C.MODEL.ADV.COND_GRL_WEIGHT_P3 = 0.1
+
+# adversarial parameter: GRL weight for center-aware discriminator
+_C.MODEL.ADV.HA_GRL_WEIGHT_P7 = 0.1
+_C.MODEL.ADV.HA_GRL_WEIGHT_P6 = 0.1
+_C.MODEL.ADV.HA_GRL_WEIGHT_P5 = 0.1
+_C.MODEL.ADV.HA_GRL_WEIGHT_P4 = 0.1
+_C.MODEL.ADV.HA_GRL_WEIGHT_P3 = 0.1
 
 # ---------------------------------------------------------------------------- #
 # RetinaNet Options (Follow the Detectron version)

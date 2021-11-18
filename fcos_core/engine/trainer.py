@@ -1,7 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import datetime
 import logging
-import time
+import time, os
 
 import torch
 import torch.distributed as dist
@@ -90,9 +90,15 @@ def do_train(
         device,
         checkpoint_period,
         arguments,
+        cfg,
+        run_test,
+        distributed,
+        writer
 ):
     USE_DIS_GLOBAL = arguments["use_dis_global"]
     USE_DIS_CENTER_AWARE = arguments["use_dis_ca"]
+    USE_DIS_CONDITIONAL = arguments["use_dis_conditional"]
+    USE_DIS_HEAD = arguments["use_dis_ha"]
     used_feature_layers = arguments["use_feature_layers"]
 
     # dataloader
@@ -108,6 +114,10 @@ def do_train(
         ga_dis_lambda = arguments["ga_dis_lambda"]
     if USE_DIS_CENTER_AWARE:
         ca_dis_lambda = arguments["ca_dis_lambda"]
+    if USE_DIS_CONDITIONAL:
+        cond_dis_lambda = arguments["cond_dis_lambda"]
+    if USE_DIS_HEAD:
+        ha_dis_lambda = arguments["ha_dis_lambda"]
 
     # Start training
     logger = logging.getLogger("fcos_core.trainer")
@@ -124,6 +134,7 @@ def do_train(
     start_training_time = time.time()
     end = time.time()
     pytorch_1_1_0_or_later = is_pytorch_1_1_0_or_later()
+    best_map50 = 0.0
     for iteration, ((images_s, targets_s, _), (images_t, _, _)) \
         in enumerate(zip(data_loader_source, data_loader_target), start_iter):
 
@@ -163,6 +174,11 @@ def do_train(
         losses_reduced = sum(loss for loss in loss_dict_reduced.values())
         meters.update(loss_gs=losses_reduced, **loss_dict_reduced)
 
+        writer.add_scalar('Loss_FCOS/gs', losses, iteration)
+        writer.add_scalar('Loss_FCOS/cls_gs', loss_dict['loss_cls_gs'], iteration)
+        writer.add_scalar('Loss_FCOS/reg_gs', loss_dict['loss_reg_gs'], iteration)
+        writer.add_scalar('Loss_FCOS/centerness_gs', loss_dict['loss_centerness_gs'], iteration)
+
         losses.backward(retain_graph=True)
         del loss_dict, losses
 
@@ -181,8 +197,40 @@ def do_train(
             if USE_DIS_CENTER_AWARE:
                 loss_dict["loss_adv_%s_CA_ds" % layer] = \
                     ca_dis_lambda * model["dis_%s_CA" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source')
+            if USE_DIS_CONDITIONAL:
+                loss_dict["loss_adv_%s_Cond_ds" %layer] = \
+                    cond_dis_lambda * model["dis_%s_Cond" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source')
+            if USE_DIS_HEAD:
+                loss_dict["loss_adv_%s_HA_ds" % layer] = \
+                    ha_dis_lambda * model["dis_%s_HA" % layer](source_label, score_maps_s[layer], domain='source')
 
         losses = sum(loss for loss in loss_dict.values())
+
+        writer.add_scalar('Loss_DISC/ds', losses, iteration)
+        if USE_DIS_GLOBAL:
+            writer.add_scalar('Loss_DISC/P3_ds', loss_dict['loss_adv_P3_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P4_ds', loss_dict['loss_adv_P4_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P5_ds', loss_dict['loss_adv_P5_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P6_ds', loss_dict['loss_adv_P6_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P7_ds', loss_dict['loss_adv_P7_ds'], iteration)
+        if USE_DIS_CENTER_AWARE:
+            writer.add_scalar('Loss_DISC/P3_CA_ds', loss_dict['loss_adv_P3_CA_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P4_CA_ds', loss_dict['loss_adv_P4_CA_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P5_CA_ds', loss_dict['loss_adv_P5_CA_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P6_CA_ds', loss_dict['loss_adv_P6_CA_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P7_CA_ds', loss_dict['loss_adv_P7_CA_ds'], iteration)
+        if USE_DIS_CONDITIONAL:
+            writer.add_scalar('Loss_DISC/P3_Cond_ds', loss_dict['loss_adv_P3_Cond_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P4_Cond_ds', loss_dict['loss_adv_P4_Cond_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P5_Cond_ds', loss_dict['loss_adv_P5_Cond_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P6_Cond_ds', loss_dict['loss_adv_P6_Cond_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P7_Cond_ds', loss_dict['loss_adv_P7_Cond_ds'], iteration)
+        if USE_DIS_HEAD:
+            writer.add_scalar('Loss_DISC/P3_HA_ds', loss_dict['loss_adv_P3_HA_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P4_HA_ds', loss_dict['loss_adv_P4_HA_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P5_HA_ds', loss_dict['loss_adv_P5_HA_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P6_HA_ds', loss_dict['loss_adv_P6_HA_ds'], iteration)
+            writer.add_scalar('Loss_DISC/P7_HA_ds', loss_dict['loss_adv_P7_HA_ds'], iteration)
 
         # reduce losses over all GPUs for logging purposes
         loss_dict_reduced = reduce_loss_dict(loss_dict)
@@ -210,8 +258,43 @@ def do_train(
             if USE_DIS_CENTER_AWARE:
                 loss_dict["loss_adv_%s_CA_dt" %layer] = \
                     ca_dis_lambda * model["dis_%s_CA" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target')
+            if USE_DIS_CONDITIONAL:
+                loss_dict["loss_adv_%s_Cond_dt" %layer] = \
+                    cond_dis_lambda * model["dis_%s_Cond" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target')
+            if USE_DIS_HEAD:
+                loss_dict["loss_adv_%s_HA_dt" %layer] = \
+                    ha_dis_lambda * model["dis_%s_HA" % layer](target_label, score_maps_t[layer], domain='target')
 
         losses = sum(loss for loss in loss_dict.values())
+
+        writer.add_scalar('Loss_DISC/dt', losses, iteration)
+        if USE_DIS_GLOBAL:
+            writer.add_scalar('Loss_DISC/P3_dt', loss_dict['loss_adv_P3_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P4_dt', loss_dict['loss_adv_P4_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P5_dt', loss_dict['loss_adv_P5_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P6_dt', loss_dict['loss_adv_P6_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P7_dt', loss_dict['loss_adv_P7_dt'], iteration)
+
+        if USE_DIS_CENTER_AWARE:
+            writer.add_scalar('Loss_DISC/P3_CA_dt', loss_dict['loss_adv_P3_CA_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P4_CA_dt', loss_dict['loss_adv_P4_CA_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P5_CA_dt', loss_dict['loss_adv_P5_CA_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P6_CA_dt', loss_dict['loss_adv_P6_CA_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P7_CA_dt', loss_dict['loss_adv_P7_CA_dt'], iteration)
+
+        if USE_DIS_CONDITIONAL:
+            writer.add_scalar('Loss_DISC/P3_Cond_dt', loss_dict['loss_adv_P3_Cond_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P4_Cond_dt', loss_dict['loss_adv_P4_Cond_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P5_Cond_dt', loss_dict['loss_adv_P5_Cond_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P6_Cond_dt', loss_dict['loss_adv_P6_Cond_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P7_Cond_dt', loss_dict['loss_adv_P7_Cond_dt'], iteration)
+
+        if USE_DIS_HEAD:
+            writer.add_scalar('Loss_DISC/P3_HA_dt', loss_dict['loss_adv_P3_HA_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P4_HA_dt', loss_dict['loss_adv_P4_HA_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P5_HA_dt', loss_dict['loss_adv_P5_HA_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P6_HA_dt', loss_dict['loss_adv_P6_HA_dt'], iteration)
+            writer.add_scalar('Loss_DISC/P7_HA_dt', loss_dict['loss_adv_P7_HA_dt'], iteration)
 
         # del "zero" (useless after backward)
         del loss_dict['zero']
@@ -230,28 +313,12 @@ def do_train(
 
         losses.backward()
 
-        # Uncomment to log GRL gradient
-        grl_grad = {}
-        grl_grad_log = {}
-        # grl_grad = {
-        #     layer: grad_list[i]
-        #     for i, layer in enumerate(used_feature_layers)
-        # }
-        # for layer in used_feature_layers:
-        #     saved_grad = grl_grad[layer]
-        #     grl_grad_log["grl_%s_abs_mean" % layer] = torch.mean(
-        #         torch.abs(saved_grad)) * 10e4
-        #     grl_grad_log["grl_%s_mean" % layer] = torch.mean(saved_grad) * 10e6
-        #     grl_grad_log["grl_%s_std" % layer] = torch.std(saved_grad) * 10e6
-        #     grl_grad_log["grl_%s_max" % layer] = torch.max(saved_grad) * 10e6
-        #     grl_grad_log["grl_%s_min" % layer] = torch.min(saved_grad) * 10e6
-        # meters.update(**grl_grad_log)
-
-        del loss_dict, losses, grad_list, grl_grad, grl_grad_log
-
         ##########################################################################
         ##########################################################################
         ##########################################################################
+        max_norm = 5
+        for k in model:
+            torch.nn.utils.clip_grad_norm_(model[k].parameters(), max_norm)
 
         # optimizer.step()
         for k in optimizer:
@@ -295,11 +362,16 @@ def do_train(
                     memory=torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
                 ))
         if iteration % checkpoint_period == 0:
-            checkpointer.save("model_{:07d}".format(iteration), **arguments)
-        # if iteration > 5000 and iteration <= 6000 and iteration % 50 == 0:
-        #     checkpointer.save("model_{:07d}".format(iteration), **arguments)
-        if iteration == max_iter:
             checkpointer.save("model_final", **arguments)
+            results = run_test(cfg, model, distributed)
+            for ap_key in results[0][0].results['bbox'].keys():
+                writer.add_scalar('mAP_val/{}'.format(ap_key), results[0][0].results['bbox'][ap_key], iteration)
+            map50 = results[0][0].results['bbox']['AP50']
+            if map50 > best_map50:
+                checkpointer.save("model_best", **arguments)
+                best_map50 = map50
+            for k in model:
+                model[k].train()
 
     total_training_time = time.time() - start_training_time
     total_time_str = str(datetime.timedelta(seconds=total_training_time))

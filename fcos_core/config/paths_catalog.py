@@ -102,6 +102,10 @@ class DatasetCatalog(object):
             "img_dir": "Cityscapes/leftImg8bit/train",
             "ann_file": "Cityscapes/cocoAnnotations/cityscapes_train_cocostyle.json"
         },
+        "cityscapes_val_cocostyle": {
+            "img_dir": "Cityscapes/leftImg8bit/val",
+            "ann_file": "Cityscapes/cocoAnnotations/cityscapes_val_cocostyle.json"
+        },
         "cityscapes_train_caronly_cocostyle": {
             "img_dir": "Cityscapes/leftImg8bit/train",
             "ann_file": "Cityscapes/cocoAnnotations/cityscapes_train_caronly_cocostyle.json"

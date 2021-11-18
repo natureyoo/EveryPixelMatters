@@ -1,2 +1,4 @@
 from .fcos_head_discriminator import FCOSDiscriminator
 from .fcos_head_discriminator_CA import FCOSDiscriminator_CA
+from .fcos_head_discriminator_CondA import FCOSDiscriminator_CondA
+from .fcos_head_discriminator_HA import FCOSDiscriminator_HA

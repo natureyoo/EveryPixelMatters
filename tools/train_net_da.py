@@ -20,18 +20,18 @@ from fcos_core.engine.trainer import do_train
 from fcos_core.modeling.detector import build_detection_model
 from fcos_core.modeling.backbone import build_backbone
 from fcos_core.modeling.rpn.rpn import build_rpn
-from fcos_core.modeling.discriminator import FCOSDiscriminator, FCOSDiscriminator_CA
+from fcos_core.modeling.discriminator import FCOSDiscriminator, FCOSDiscriminator_CA, FCOSDiscriminator_CondA, FCOSDiscriminator_HA
 from fcos_core.utils.checkpoint import DetectronCheckpointer
 from fcos_core.utils.collect_env import collect_env_info
-from fcos_core.utils.comm import synchronize, \
-    get_rank, is_pytorch_1_1_0_or_later
+from fcos_core.utils.comm import synchronize, get_rank, is_pytorch_1_1_0_or_later, all_gather
 from fcos_core.utils.imports import import_file
 from fcos_core.utils.logger import setup_logger
 from fcos_core.utils.miscellaneous import mkdir
-
+from torch.utils.tensorboard import SummaryWriter
 
 
 def train(cfg, local_rank, distributed):
+    writer = SummaryWriter('runs/{}'.format(cfg.OUTPUT_DIR))
     ##########################################################################
     ############################# Initial Model ##############################
     ##########################################################################
@@ -105,6 +105,75 @@ def train(cfg, local_rank, distributed):
                 center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
                 grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
 
+    if cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
+        if cfg.MODEL.ADV.USE_DIS_P7:
+            dis_P7_Cond = FCOSDiscriminator_CondA(
+                num_convs=cfg.MODEL.ADV.COND_DIS_P7_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P7,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+        if cfg.MODEL.ADV.USE_DIS_P6:
+            dis_P6_Cond = FCOSDiscriminator_CondA(
+                num_convs=cfg.MODEL.ADV.COND_DIS_P6_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P6,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+        if cfg.MODEL.ADV.USE_DIS_P5:
+            dis_P5_Cond = FCOSDiscriminator_CondA(
+                num_convs=cfg.MODEL.ADV.COND_DIS_P5_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P5,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+        if cfg.MODEL.ADV.USE_DIS_P4:
+            dis_P4_Cond = FCOSDiscriminator_CondA(
+                num_convs=cfg.MODEL.ADV.COND_DIS_P4_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P4,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+        if cfg.MODEL.ADV.USE_DIS_P3:
+            dis_P3_Cond = FCOSDiscriminator_CondA(
+                num_convs=cfg.MODEL.ADV.COND_DIS_P3_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P3,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+
+    if cfg.MODEL.ADV.USE_DIS_HEAD:
+        if cfg.MODEL.ADV.USE_DIS_P7:
+            dis_P7_HA = FCOSDiscriminator_HA(
+                num_convs=cfg.MODEL.ADV.HA_DIS_P7_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.HA_GRL_WEIGHT_P7,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+        if cfg.MODEL.ADV.USE_DIS_P6:
+            dis_P6_HA = FCOSDiscriminator_HA(
+                num_convs=cfg.MODEL.ADV.HA_DIS_P6_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.HA_GRL_WEIGHT_P6,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+        if cfg.MODEL.ADV.USE_DIS_P5:
+            dis_P5_HA = FCOSDiscriminator_HA(
+                num_convs=cfg.MODEL.ADV.HA_DIS_P5_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.HA_GRL_WEIGHT_P5,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+        if cfg.MODEL.ADV.USE_DIS_P4:
+            dis_P4_HA = FCOSDiscriminator_HA(
+                num_convs=cfg.MODEL.ADV.HA_DIS_P4_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.HA_GRL_WEIGHT_P4,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+        if cfg.MODEL.ADV.USE_DIS_P3:
+            dis_P3_HA = FCOSDiscriminator_HA(
+                num_convs=cfg.MODEL.ADV.HA_DIS_P3_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.HA_GRL_WEIGHT_P3,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN).to(device)
+
     if cfg.MODEL.USE_SYNCBN:
         assert is_pytorch_1_1_0_or_later(), \
             "SyncBatchNorm is only available in pytorch >= 1.1.0"
@@ -134,6 +203,30 @@ def train(cfg, local_rank, distributed):
                 dis_P4_CA = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P4_CA)
             if cfg.MODEL.ADV.USE_DIS_P3:
                 dis_P3_CA = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P3_CA)
+
+        if cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
+            if cfg.MODEL.ADV.USE_DIS_P7:
+                dis_P7_Cond = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P7_Cond)
+            if cfg.MODEL.ADV.USE_DIS_P6:
+                dis_P6_Cond = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P6_Cond)
+            if cfg.MODEL.ADV.USE_DIS_P5:
+                dis_P5_Cond = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P5_Cond)
+            if cfg.MODEL.ADV.USE_DIS_P4:
+                dis_P4_Cond = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P4_Cond)
+            if cfg.MODEL.ADV.USE_DIS_P3:
+                dis_P3_Cond = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P3_Cond)
+
+        if cfg.MODEL.ADV.USE_DIS_HEAD:
+            if cfg.MODEL.ADV.USE_DIS_P7:
+                dis_P7_HA = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P7_HA)
+            if cfg.MODEL.ADV.USE_DIS_P6:
+                dis_P6_HA = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P6_HA)
+            if cfg.MODEL.ADV.USE_DIS_P5:
+                dis_P5_HA = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P5_HA)
+            if cfg.MODEL.ADV.USE_DIS_P4:
+                dis_P4_HA = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P4_HA)
+            if cfg.MODEL.ADV.USE_DIS_P3:
+                dis_P3_HA = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P3_HA)
 
     ##########################################################################
     #################### Initial Optimizer and Scheduler #####################
@@ -166,6 +259,30 @@ def train(cfg, local_rank, distributed):
         if cfg.MODEL.ADV.USE_DIS_P3:
             optimizer["dis_P3_CA"] = make_optimizer(cfg, dis_P3_CA, name='discriminator')
 
+    if cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
+        if cfg.MODEL.ADV.USE_DIS_P7:
+            optimizer["dis_P7_Cond"] = make_optimizer(cfg, dis_P7_Cond, name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P6:
+            optimizer["dis_P6_Cond"] = make_optimizer(cfg, dis_P6_Cond, name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P5:
+            optimizer["dis_P5_Cond"] = make_optimizer(cfg, dis_P5_Cond, name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P4:
+            optimizer["dis_P4_Cond"] = make_optimizer(cfg, dis_P4_Cond, name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P3:
+            optimizer["dis_P3_Cond"] = make_optimizer(cfg, dis_P3_Cond, name='discriminator')
+
+    if cfg.MODEL.ADV.USE_DIS_HEAD:
+        if cfg.MODEL.ADV.USE_DIS_P7:
+            optimizer["dis_P7_HA"] = make_optimizer(cfg, dis_P7_HA, name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P6:
+            optimizer["dis_P6_HA"] = make_optimizer(cfg, dis_P6_HA, name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P5:
+            optimizer["dis_P5_HA"] = make_optimizer(cfg, dis_P5_HA, name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P4:
+            optimizer["dis_P4_HA"] = make_optimizer(cfg, dis_P4_HA, name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P3:
+            optimizer["dis_P3_HA"] = make_optimizer(cfg, dis_P3_HA, name='discriminator')
+
     scheduler = {}
     scheduler["backbone"] = make_lr_scheduler(cfg, optimizer["backbone"], name='backbone')
     scheduler["fcos"] = make_lr_scheduler(cfg, optimizer["fcos"], name='fcos')
@@ -193,6 +310,30 @@ def train(cfg, local_rank, distributed):
             scheduler["dis_P4_CA"] = make_lr_scheduler(cfg, optimizer["dis_P4_CA"], name='discriminator')
         if cfg.MODEL.ADV.USE_DIS_P3:
             scheduler["dis_P3_CA"] = make_lr_scheduler(cfg, optimizer["dis_P3_CA"], name='discriminator')
+
+    if cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
+        if cfg.MODEL.ADV.USE_DIS_P7:
+            scheduler["dis_P7_Cond"] = make_lr_scheduler(cfg, optimizer["dis_P7_Cond"], name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P6:
+            scheduler["dis_P6_Cond"] = make_lr_scheduler(cfg, optimizer["dis_P6_Cond"], name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P5:
+            scheduler["dis_P5_Cond"] = make_lr_scheduler(cfg, optimizer["dis_P5_Cond"], name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P4:
+            scheduler["dis_P4_Cond"] = make_lr_scheduler(cfg, optimizer["dis_P4_Cond"], name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P3:
+            scheduler["dis_P3_Cond"] = make_lr_scheduler(cfg, optimizer["dis_P3_Cond"], name='discriminator')
+
+    if cfg.MODEL.ADV.USE_DIS_HEAD:
+        if cfg.MODEL.ADV.USE_DIS_P7:
+            scheduler["dis_P7_HA"] = make_lr_scheduler(cfg, optimizer["dis_P7_HA"], name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P6:
+            scheduler["dis_P6_HA"] = make_lr_scheduler(cfg, optimizer["dis_P6_HA"], name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P5:
+            scheduler["dis_P5_HA"] = make_lr_scheduler(cfg, optimizer["dis_P5_HA"], name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P4:
+            scheduler["dis_P4_HA"] = make_lr_scheduler(cfg, optimizer["dis_P4_HA"], name='discriminator')
+        if cfg.MODEL.ADV.USE_DIS_P3:
+            scheduler["dis_P3_HA"] = make_lr_scheduler(cfg, optimizer["dis_P3_HA"], name='discriminator')
 
     ##########################################################################
     ######################## DistributedDataParallel #########################
@@ -273,6 +414,70 @@ def train(cfg, local_rank, distributed):
                     broadcast_buffers=False
                 )
 
+        if cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
+            if cfg.MODEL.ADV.USE_DIS_P7:
+                dis_P7_Cond = torch.nn.parallel.DistributedDataParallel(
+                    dis_P7_Cond, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+            if cfg.MODEL.ADV.USE_DIS_P6:
+                dis_P6_Cond = torch.nn.parallel.DistributedDataParallel(
+                    dis_P6_Cond, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+            if cfg.MODEL.ADV.USE_DIS_P5:
+                dis_P5_Cond = torch.nn.parallel.DistributedDataParallel(
+                    dis_P5_Cond, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+            if cfg.MODEL.ADV.USE_DIS_P4:
+                dis_P4_Cond = torch.nn.parallel.DistributedDataParallel(
+                    dis_P4_Cond, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+            if cfg.MODEL.ADV.USE_DIS_P3:
+                dis_P3_Cond = torch.nn.parallel.DistributedDataParallel(
+                    dis_P3_Cond, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+
+        if cfg.MODEL.ADV.USE_DIS_HEAD:
+            if cfg.MODEL.ADV.USE_DIS_P7:
+                dis_P7_HA = torch.nn.parallel.DistributedDataParallel(
+                    dis_P7_HA, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+            if cfg.MODEL.ADV.USE_DIS_P6:
+                dis_P6_HA = torch.nn.parallel.DistributedDataParallel(
+                    dis_P6_HA, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+            if cfg.MODEL.ADV.USE_DIS_P5:
+                dis_P5_HA = torch.nn.parallel.DistributedDataParallel(
+                    dis_P5_HA, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+            if cfg.MODEL.ADV.USE_DIS_P4:
+                dis_P4_HA = torch.nn.parallel.DistributedDataParallel(
+                    dis_P4_HA, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+            if cfg.MODEL.ADV.USE_DIS_P3:
+                dis_P3_HA = torch.nn.parallel.DistributedDataParallel(
+                    dis_P3_HA, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+
     ##########################################################################
     ########################### Save Model to Dict ###########################
     ##########################################################################
@@ -303,6 +508,30 @@ def train(cfg, local_rank, distributed):
         if cfg.MODEL.ADV.USE_DIS_P3:
             model["dis_P3_CA"] = dis_P3_CA
 
+    if cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
+        if cfg.MODEL.ADV.USE_DIS_P7:
+            model["dis_P7_Cond"] = dis_P7_Cond
+        if cfg.MODEL.ADV.USE_DIS_P6:
+            model["dis_P6_Cond"] = dis_P6_Cond
+        if cfg.MODEL.ADV.USE_DIS_P5:
+            model["dis_P5_Cond"] = dis_P5_Cond
+        if cfg.MODEL.ADV.USE_DIS_P4:
+            model["dis_P4_Cond"] = dis_P4_Cond
+        if cfg.MODEL.ADV.USE_DIS_P3:
+            model["dis_P3_Cond"] = dis_P3_Cond
+
+    if cfg.MODEL.ADV.USE_DIS_HEAD:
+        if cfg.MODEL.ADV.USE_DIS_P7:
+            model["dis_P7_HA"] = dis_P7_HA
+        if cfg.MODEL.ADV.USE_DIS_P6:
+            model["dis_P6_HA"] = dis_P6_HA
+        if cfg.MODEL.ADV.USE_DIS_P5:
+            model["dis_P5_HA"] = dis_P5_HA
+        if cfg.MODEL.ADV.USE_DIS_P4:
+            model["dis_P4_HA"] = dis_P4_HA
+        if cfg.MODEL.ADV.USE_DIS_P3:
+            model["dis_P3_HA"] = dis_P3_HA
+
     ##########################################################################
     ################################ Training ################################
     ##########################################################################
@@ -310,8 +539,12 @@ def train(cfg, local_rank, distributed):
     arguments["iteration"] = 0
     arguments["use_dis_global"] = cfg.MODEL.ADV.USE_DIS_GLOBAL
     arguments["use_dis_ca"] = cfg.MODEL.ADV.USE_DIS_CENTER_AWARE
+    arguments["use_dis_conditional"] = cfg.MODEL.ADV.USE_DIS_CONDITIONAL
+    arguments["use_dis_ha"] = cfg.MODEL.ADV.USE_DIS_HEAD
     arguments["ga_dis_lambda"] = cfg.MODEL.ADV.GA_DIS_LAMBDA
     arguments["ca_dis_lambda"] = cfg.MODEL.ADV.CA_DIS_LAMBDA
+    arguments["cond_dis_lambda"] = cfg.MODEL.ADV.COND_DIS_LAMBDA
+    arguments["ha_dis_lambda"] = cfg.MODEL.ADV.HA_DIS_LAMBDA
 
     arguments["use_feature_layers"] = []
     if cfg.MODEL.ADV.USE_DIS_P7:
@@ -359,15 +592,20 @@ def train(cfg, local_rank, distributed):
         device,
         checkpoint_period,
         arguments,
+        cfg,
+        run_test,
+        distributed,
+        writer
     )
 
     return model
 
 
 def run_test(cfg, model, distributed):
+    model_test = {}
     if distributed:
-        model["backbone"] = model["backbone"].module
-        model["fcos"] = model["fcos"].module
+        model_test["backbone"] = model["backbone"].module
+        model_test["fcos"] = model["fcos"].module
         #if cfg.MODEL.ADV.USE_DIS_P7:
         #    model["dis_P7"] = model["dis_P7"].module
         #if cfg.MODEL.ADV.USE_DIS_P6:
@@ -384,27 +622,26 @@ def run_test(cfg, model, distributed):
         iou_types = iou_types + ("segm",)
     if cfg.MODEL.KEYPOINT_ON:
         iou_types = iou_types + ("keypoints",)
-    output_folders = [None] * len(cfg.DATASETS.TEST)
-    dataset_names = cfg.DATASETS.TEST
+    dataset_name = cfg.DATASETS.TEST[0]
     if cfg.OUTPUT_DIR:
-        for idx, dataset_name in enumerate(dataset_names):
-            output_folder = os.path.join(cfg.OUTPUT_DIR, "inference", dataset_name)
-            mkdir(output_folder)
-            output_folders[idx] = output_folder
+        output_folder = os.path.join(cfg.OUTPUT_DIR, "inference", dataset_name)
+        mkdir(output_folder)
     data_loaders_val = make_data_loader(cfg, is_train=False, is_distributed=distributed)
-    for output_folder, dataset_name, data_loader_val in zip(output_folders, dataset_names, data_loaders_val):
-        inference(
-            model,
-            data_loader_val,
-            dataset_name=dataset_name,
-            iou_types=iou_types,
-            box_only=False if cfg.MODEL.FCOS_ON or cfg.MODEL.RETINANET_ON else cfg.MODEL.RPN_ONLY,
-            device=cfg.MODEL.DEVICE,
-            expected_results=cfg.TEST.EXPECTED_RESULTS,
-            expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
-            output_folder=output_folder,
-        )
-        synchronize()
+    results = inference(
+        model_test,
+        data_loaders_val[0],
+        dataset_name=dataset_name,
+        iou_types=iou_types,
+        box_only=False if cfg.MODEL.FCOS_ON or cfg.MODEL.RETINANET_ON else cfg.MODEL.RPN_ONLY,
+        device=cfg.MODEL.DEVICE,
+        expected_results=cfg.TEST.EXPECTED_RESULTS,
+        expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
+        output_folder=output_folder,
+    )
+    synchronize()
+    results = all_gather(results)
+    # import pdb; pdb.set_trace()
+    return results
 
 
 def main():
