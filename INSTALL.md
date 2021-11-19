@@ -23,7 +23,7 @@ conda activate EveryPixelMatters
 conda install ipython
 
 # FCOS and coco api dependencies
-pip install ninja yacs cython matplotlib tqdm
+pip install ninja yacs cython matplotlib tqdm tensorboard
 
 # follow PyTorch installation in https://pytorch.org/get-started/locally/
 # we give the instructions for CUDA 9.0
