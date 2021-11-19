@@ -26,7 +26,9 @@ MODEL:
     CENTER_AWARE_TYPE: "ca_feature" # or "ca_loss"
     #
     COND_CLASS: False
-    COND_REG: False
+    COND_REG:
+      LEFT: False
+      TOP: False
     #
     GA_DIS_LAMBDA: 0.01
     CA_DIS_LAMBDA: 0.1

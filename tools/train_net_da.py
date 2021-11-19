@@ -114,7 +114,8 @@ def train(cfg, local_rank, distributed):
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
                 grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
                 class_align=cfg.MODEL.ADV.COND_CLASS,
-                reg_align=cfg.MODEL.ADV.COND_REG).to(device)
+                reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
+                reg_top_align=cfg.MODEL.ADV.COND_REG.TOP).to(device)
         if cfg.MODEL.ADV.USE_DIS_P6:
             dis_P6_Cond = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P6_NUM_CONVS,
@@ -123,7 +124,8 @@ def train(cfg, local_rank, distributed):
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
                 grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
                 class_align=cfg.MODEL.ADV.COND_CLASS,
-                reg_align=cfg.MODEL.ADV.COND_REG).to(device)
+                reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
+                reg_top_align=cfg.MODEL.ADV.COND_REG.TOP).to(device)
         if cfg.MODEL.ADV.USE_DIS_P5:
             dis_P5_Cond = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P5_NUM_CONVS,
@@ -132,7 +134,8 @@ def train(cfg, local_rank, distributed):
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
                 grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
                 class_align=cfg.MODEL.ADV.COND_CLASS,
-                reg_align=cfg.MODEL.ADV.COND_REG).to(device)
+                reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
+                reg_top_align=cfg.MODEL.ADV.COND_REG.TOP).to(device)
         if cfg.MODEL.ADV.USE_DIS_P4:
             dis_P4_Cond = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P4_NUM_CONVS,
@@ -141,7 +144,8 @@ def train(cfg, local_rank, distributed):
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
                 grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
                 class_align=cfg.MODEL.ADV.COND_CLASS,
-                reg_align=cfg.MODEL.ADV.COND_REG).to(device)
+                reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
+                reg_top_align=cfg.MODEL.ADV.COND_REG.TOP).to(device)
         if cfg.MODEL.ADV.USE_DIS_P3:
             dis_P3_Cond = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P3_NUM_CONVS,
@@ -150,7 +154,8 @@ def train(cfg, local_rank, distributed):
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
                 grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
                 class_align=cfg.MODEL.ADV.COND_CLASS,
-                reg_align=cfg.MODEL.ADV.COND_REG).to(device)
+                reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
+                reg_top_align=cfg.MODEL.ADV.COND_REG.TOP).to(device)
 
     if cfg.MODEL.ADV.USE_DIS_HEAD:
         if cfg.MODEL.ADV.USE_DIS_P7:
