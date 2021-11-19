@@ -135,7 +135,7 @@ class FCOSDiscriminator_CondA(nn.Module):
                 # feature_[key] = feature_[key] * centerness_map * entropy.unsqueeze(1)
                 feature_['reg_t'] = feature_['reg_t'] * atten_map
 
-        feature = torch.cat([feature_[k] for k in feature_.keys()], dim=-1)
+        feature = torch.cat([feature_[k] for k in feature_.keys()], dim=1)
         if self.grl_applied_domain == 'both':
             feature = self.grad_reverse(feature)
         elif self.grl_applied_domain == 'target':
