@@ -17,7 +17,6 @@ class FCOSDiscriminator_CondA(nn.Module):
         # self.random_embed = torch.randn(in_channels, self.embed_dim).cuda()
         self.random_embed = None
         dis_tower = []
-        self.cls_logits = {}
         self.num = {'class':8, 'reg_l':3, 'reg_t':3, 'reg_b':3, 'reg_r':3}
         self.class_align = class_align
         self.reg_left_align = reg_left_align
