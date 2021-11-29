@@ -377,3 +377,135 @@ def do_train(
     total_time_str = str(datetime.timedelta(seconds=total_training_time))
     logger.info("Total training time: {} ({:.4f} s / it)".format(
         total_time_str, total_training_time / (max_iter)))
+
+
+def do_train_base(
+        model,
+        data_loader,
+        optimizer,
+        scheduler,
+        checkpointer,
+        device,
+        checkpoint_period,
+        arguments,
+        cfg,
+        run_test,
+        distributed,
+        writer
+):
+    # Start training
+    logger = logging.getLogger("fcos_core.trainer")
+    logger.info("Start training")
+
+    # model.train()
+    for k in model:
+        model[k].train()
+
+    meters = MetricLogger(delimiter="  ")
+    max_iter = len(data_loader)
+    start_iter = arguments["iteration"]
+    start_training_time = time.time()
+    end = time.time()
+    pytorch_1_1_0_or_later = is_pytorch_1_1_0_or_later()
+    best_map50 = 0.0
+    for iteration, (images_s, targets_s, _) in enumerate(data_loader, start_iter):
+
+        data_time = time.time() - end
+        iteration = iteration + 1
+        arguments["iteration"] = iteration
+
+        # in pytorch >= 1.1.0, scheduler.step() should be run after optimizer.step()
+        if not pytorch_1_1_0_or_later:
+            # scheduler.step()
+            for k in scheduler:
+                scheduler[k].step()
+
+        images_s = images_s.to(device)
+        targets_s = [target_s.to(device) for target_s in targets_s]
+
+        # optimizer.zero_grad()
+        for k in optimizer:
+            optimizer[k].zero_grad()
+
+        ##########################################################################
+        #################### (1): train G #####################
+        ##########################################################################
+
+        loss_dict, features_s, score_maps_s = foward_detector(
+            model, images_s, targets=targets_s, return_maps=True)
+
+        # rename loss to indicate domain
+        loss_dict = {k + "_gs": loss_dict[k] for k in loss_dict}
+
+        losses = sum(loss for loss in loss_dict.values())
+
+        # reduce losses over all GPUs for logging purposes
+        loss_dict_reduced = reduce_loss_dict(loss_dict)
+        losses_reduced = sum(loss for loss in loss_dict_reduced.values())
+        meters.update(loss_gs=losses_reduced, **loss_dict_reduced)
+
+        writer.add_scalar('Loss_FCOS/gs', losses, iteration)
+        writer.add_scalar('Loss_FCOS/cls_gs', loss_dict['loss_cls_gs'], iteration)
+        writer.add_scalar('Loss_FCOS/reg_gs', loss_dict['loss_reg_gs'], iteration)
+        writer.add_scalar('Loss_FCOS/centerness_gs', loss_dict['loss_centerness_gs'], iteration)
+
+        losses.backward(retain_graph=True)
+        del loss_dict, losses
+
+        ##########################################################################
+        ##########################################################################
+        ##########################################################################
+        max_norm = 5
+        for k in model:
+            torch.nn.utils.clip_grad_norm_(model[k].parameters(), max_norm)
+
+        # optimizer.step()
+        for k in optimizer:
+            optimizer[k].step()
+
+        if pytorch_1_1_0_or_later:
+            # scheduler.step()
+            for k in scheduler:
+                scheduler[k].step()
+
+        # End of training
+        batch_time = time.time() - end
+        end = time.time()
+        meters.update(time=batch_time, data=data_time)
+
+        eta_seconds = meters.time.global_avg * (max_iter - iteration)
+        eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
+
+        if iteration % 20 == 0 or iteration == max_iter:
+            logger.info(
+                meters.delimiter.join([
+                    "eta: {eta}",
+                    "iter: {iter}",
+                    "{meters}",
+                    "lr_backbone: {lr_backbone:.6f}",
+                    "lr_fcos: {lr_fcos:.6f}",
+                    "max mem: {memory:.0f}",
+                ]).format(
+                    eta=eta_string,
+                    iter=iteration,
+                    meters=str(meters),
+                    lr_backbone=optimizer["backbone"].param_groups[0]["lr"],
+                    lr_fcos=optimizer["fcos"].param_groups[0]["lr"],
+                    memory=torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
+                ))
+        if iteration % checkpoint_period == 0:
+            checkpointer.save("model_final", **arguments)
+            results = run_test(cfg, model, distributed)
+            for ap_key in results[0][0].results['bbox'].keys():
+                writer.add_scalar('mAP_val/{}'.format(ap_key), results[0][0].results['bbox'][ap_key], iteration)
+            map50 = results[0][0].results['bbox']['AP50']
+            if map50 > best_map50:
+                checkpointer.save("model_best", **arguments)
+                best_map50 = map50
+            for k in model:
+                model[k].train()
+
+    total_training_time = time.time() - start_training_time
+    total_time_str = str(datetime.timedelta(seconds=total_training_time))
+    logger.info("Total training time: {} ({:.4f} s / it)".format(
+        total_time_str, total_training_time / (max_iter)))
