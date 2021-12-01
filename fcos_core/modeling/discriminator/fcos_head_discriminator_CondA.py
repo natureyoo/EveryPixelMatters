@@ -79,7 +79,7 @@ class FCOSDiscriminator_CondA(nn.Module):
         assert grl_applied_domain == 'both' or grl_applied_domain == 'target'
         self.grl_applied_domain = grl_applied_domain
 
-    def forward(self, feature, target, score_map=None, domain='source'):
+    def forward(self, feature, target, score_map=None, domain='source', alpha=0.0):
         assert target == 0 or target == 1 or target == 0.1 or target == 0.9
         assert domain == 'source' or domain == 'target'
 
@@ -108,6 +108,7 @@ class FCOSDiscriminator_CondA(nn.Module):
             # entropy = 1 + torch.exp(-entropy)
 
             box_cls_pred = box_cls_pred.permute(0,2,3,1).reshape(-1, 8)
+            box_cls_pred = alpha * torch.ones(box_cls_pred.shape).cuda() / 8 + (1 - alpha) * box_cls_pred
             feature_['class'] = torch.bmm(feature.unsqueeze(2), box_cls_pred.unsqueeze(1))
             feature_['class'] = feature_['class'].reshape(feature_['class'].shape[0], -1).reshape(sh[0], sh[2], sh[3], -1).permute(0,3,1,2)
             # feature_['class'] = feature_['class'] * centerness_map * entropy.unsqueeze(1)
@@ -122,6 +123,7 @@ class FCOSDiscriminator_CondA(nn.Module):
                 box_cls_onehot = torch.FloatTensor(box_cls_gt.shape[0], 3).cuda()
                 box_cls_onehot.zero_()
                 box_cls_onehot.scatter_(1, box_cls_gt[:, 0].reshape(-1, 1), 1)
+                box_cls_onehot = alpha * torch.ones(box_cls_onehot.shape).cuda() / 3 + (1 - alpha) * box_cls_onehot
                 feature_['reg_l'] = torch.bmm(feature.unsqueeze(2), box_cls_onehot.unsqueeze(1))
                 feature_['reg_l'] = feature_['reg_l'].reshape(feature_['reg_l'].shape[0], -1).reshape(sh[0], sh[2], sh[3], -1).permute(0,3,1,2)
                 # feature_[key] = feature_[key] * centerness_map * entropy.unsqueeze(1)
@@ -130,6 +132,7 @@ class FCOSDiscriminator_CondA(nn.Module):
                 box_cls_onehot = torch.FloatTensor(box_cls_gt.shape[0], 3).cuda()
                 box_cls_onehot.zero_()
                 box_cls_onehot.scatter_(1, box_cls_gt[:, 1].reshape(-1, 1), 1)
+                box_cls_onehot = alpha * torch.ones(box_cls_onehot.shape).cuda() / 3 + (1 - alpha) * box_cls_onehot
                 feature_['reg_t'] = torch.bmm(feature.unsqueeze(2), box_cls_onehot.unsqueeze(1))
                 feature_['reg_t'] = feature_['reg_t'].reshape(feature_['reg_t'].shape[0], -1).reshape(sh[0], sh[2], sh[3], -1).permute(0,3,1,2)
                 # feature_[key] = feature_[key] * centerness_map * entropy.unsqueeze(1)

@@ -141,7 +141,7 @@ def do_train(
         data_time = time.time() - end
         iteration = iteration + 1
         arguments["iteration"] = iteration
-
+        alpha = max(1 - iteration / 6000, 0.1) if cfg.MODEL.ADV.COND_SMOOTH else 0.0
         # in pytorch >= 1.1.0, scheduler.step() should be run after optimizer.step()
         if not pytorch_1_1_0_or_later:
             # scheduler.step()
@@ -199,7 +199,7 @@ def do_train(
                     ca_dis_lambda * model["dis_%s_CA" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source')
             if USE_DIS_CONDITIONAL:
                 loss_dict["loss_adv_%s_Cond_ds" %layer] = \
-                    cond_dis_lambda * model["dis_%s_Cond" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source')
+                    cond_dis_lambda * model["dis_%s_Cond" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha)
             if USE_DIS_HEAD:
                 loss_dict["loss_adv_%s_HA_ds" % layer] = \
                     ha_dis_lambda * model["dis_%s_HA" % layer](source_label, score_maps_s[layer], domain='source')
@@ -260,7 +260,7 @@ def do_train(
                     ca_dis_lambda * model["dis_%s_CA" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target')
             if USE_DIS_CONDITIONAL:
                 loss_dict["loss_adv_%s_Cond_dt" %layer] = \
-                    cond_dis_lambda * model["dis_%s_Cond" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target')
+                    cond_dis_lambda * model["dis_%s_Cond" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target', alpha=alpha)
             if USE_DIS_HEAD:
                 loss_dict["loss_adv_%s_HA_dt" %layer] = \
                     ha_dis_lambda * model["dis_%s_HA" % layer](target_label, score_maps_t[layer], domain='target')

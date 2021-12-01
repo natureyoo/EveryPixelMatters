@@ -25,6 +25,7 @@ MODEL:
     CENTER_AWARE_WEIGHT: 20
     CENTER_AWARE_TYPE: "ca_feature" # or "ca_loss"
     #
+    COND_SMOOTH: True
     COND_CLASS: False
     COND_REG:
       LEFT: False
