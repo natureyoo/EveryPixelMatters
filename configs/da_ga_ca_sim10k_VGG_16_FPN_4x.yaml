@@ -24,10 +24,11 @@ MODEL:
     CENTER_AWARE_WEIGHT: 20
     CENTER_AWARE_TYPE: "ca_feature" # or "ca_loss"
     #
+    COND_SMOOTH: True
     COND_CLASS: False
     COND_REG:
       LEFT: True
-      TOP: True
+      TOP: False
     #
     GA_DIS_LAMBDA: 0.01
     CA_DIS_LAMBDA: 0.1
@@ -70,11 +71,11 @@ MODEL:
     CA_GRL_WEIGHT_P4: 0.02
     CA_GRL_WEIGHT_P3: 0.02
     #
-    COND_GRL_WEIGHT_P7: 0.1
-    COND_GRL_WEIGHT_P6: 0.1
-    COND_GRL_WEIGHT_P5: 0.1
-    COND_GRL_WEIGHT_P4: 0.1
-    COND_GRL_WEIGHT_P3: 0.1
+    COND_GRL_WEIGHT_P7: 0.2
+    COND_GRL_WEIGHT_P6: 0.2
+    COND_GRL_WEIGHT_P5: 0.2
+    COND_GRL_WEIGHT_P4: 0.2
+    COND_GRL_WEIGHT_P3: 0.2
 TEST:
   DETECTIONS_PER_IMG: 100 # fpn_post_nms_top_n  (default=100)
 DATASETS:

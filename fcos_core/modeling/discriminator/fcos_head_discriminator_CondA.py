@@ -21,7 +21,8 @@ class FCOSDiscriminator_CondA(nn.Module):
         self.class_align = class_align
         self.reg_left_align = reg_left_align
         self.reg_top_align = reg_top_align
-        self.bin_mean = torch.tensor([32, 64, 128]).cuda()
+        # self.bin_mean = torch.tensor([32, 64, 128]).cuda()
+        self.bin_mean = torch.tensor([8, 24, 40]).cuda()
         self.bin_std = torch.tensor([16, 16, 16]).cuda()
         self.outer_num = 0
         if self.class_align:
@@ -117,7 +118,8 @@ class FCOSDiscriminator_CondA(nn.Module):
         ############ feature * regression binning outer product ############
         if self.reg_left_align or self.reg_top_align:
             box_regression_map = box_regression_map.permute(0,2,3,1).reshape(-1, 4)     # (528,4)
-            box_cls_gt = (box_regression_map.unsqueeze(-1) - self.bin_mean.reshape(1,1,-1)) ** 2/(2*self.bin_std.reshape(1,1,-1)**2)
+            # box_cls_gt = (box_regression_map.unsqueeze(-1) - self.bin_mean.reshape(1,1,-1)) ** 2/(2*self.bin_std.reshape(1,1,-1)**2)
+            box_cls_gt = (box_regression_map.unsqueeze(-1) - self.bin_mean.reshape(1,1,-1)) ** 2
             box_cls_gt = torch.argmin(box_cls_gt, dim=-1)
             if self.reg_left_align:
                 box_cls_onehot = torch.FloatTensor(box_cls_gt.shape[0], 3).cuda()
