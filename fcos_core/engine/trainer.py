@@ -141,7 +141,7 @@ def do_train(
         data_time = time.time() - end
         iteration = iteration + 1
         arguments["iteration"] = iteration
-        alpha = max(1 - iteration / 6000, 0.1) if cfg.MODEL.ADV.COND_SMOOTH else 0.0
+        alpha = max(1 - iteration / cfg.MODEL.ADV.COND_WARMUP_ITER, cfg.MODEL.ADV.ALPHA) if cfg.MODEL.ADV.COND_SMOOTH else cfg.MODEL.ADV.ALPHA
         # in pytorch >= 1.1.0, scheduler.step() should be run after optimizer.step()
         if not pytorch_1_1_0_or_later:
             # scheduler.step()
