@@ -97,7 +97,7 @@ class FCOSDiscriminator_CondA(nn.Module):
         box_cls_pred = box_cls_map.detach()
         box_regression_map = score_map["box_regression"]
         sh = feature.shape
-        feature = feature.permute(0,2,3,1).reshape(-1,256)
+        feature = feature.permute(0,2,3,1).reshape(-1, self.embed_dim)
 
         if self.random_embed is not None:
             feature = torch.mm(feature, self.random_embed)
@@ -112,8 +112,8 @@ class FCOSDiscriminator_CondA(nn.Module):
 
         ############ feature dimension expand ############
         if self.expand:
-            feature = torch.ones(n*h*w, self.outer_num).cuda() / self.outer_num
-
+            feature = torch.bmm(feature.unsqueeze(2), torch.ones(n*h*w, 1, self.outer_num).cuda() / self.outer_num)
+            feature = feature.reshape(n, h, w, -1).permute(0, 3, 1, 2)
         else:
             ############ feature * class outer product ############
             if self.class_align:
