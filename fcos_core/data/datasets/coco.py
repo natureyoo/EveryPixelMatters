@@ -1,7 +1,8 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import torch
 import torchvision
-
+import os
+from PIL import Image
 from fcos_core.structures.bounding_box import BoxList
 from fcos_core.structures.segmentation_mask import SegmentationMask
 from fcos_core.structures.keypoint import PersonKeypoints
@@ -64,7 +65,13 @@ class COCODataset(torchvision.datasets.coco.CocoDetection):
         self.transforms = transforms
 
     def __getitem__(self, idx):
-        img, anno = super(COCODataset, self).__getitem__(idx)
+        # img, anno = super(COCODataset, self).__getitem__(idx)
+        coco = self.coco
+        img_id = self.ids[idx]
+        ann_ids = coco.getAnnIds(imgIds=img_id)
+        anno = coco.loadAnns(ann_ids)
+        path = coco.loadImgs(img_id)[0]['file_name']
+        img = Image.open(os.path.join(self.root, path)).convert('RGB')
 
         # filter crowd annotations
         # TODO might be better to add an extra field

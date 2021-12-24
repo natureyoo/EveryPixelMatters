@@ -109,11 +109,10 @@ class FCOSDiscriminator_CondA(nn.Module):
         box_cls_map = maxpooling(box_cls_map)
         # Normalize the center-aware map
         atten_map = self.center_aware_weight * box_cls_map * centerness_map
-
         ############ feature dimension expand ############
         if self.expand:
             feature = torch.bmm(feature.unsqueeze(2), torch.ones(n*h*w, 1, self.outer_num).cuda() / self.outer_num)
-            feature = feature.reshape(n, h, w, -1).permute(0, 3, 1, 2)
+            feature = feature.reshape(n, h, w, -1).permute(0, 3, 1, 2) * atten_map
         else:
             ############ feature * class outer product ############
             if self.class_align:

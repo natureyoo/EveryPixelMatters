@@ -139,7 +139,7 @@ def do_train(
     best_map50 = 0.0
     for iteration, ((images_s, targets_s, _), (images_t, _, _)) \
         in enumerate(zip(data_loader_source, data_loader_target), start_iter):
-
+        import pdb; pdb.set_trace()
         data_time = time.time() - end
         iteration = iteration + 1
         arguments["iteration"] = iteration
