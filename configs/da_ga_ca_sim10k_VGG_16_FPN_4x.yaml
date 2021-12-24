@@ -2,7 +2,7 @@ MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
   # WEIGHT: 'https://s3.ap-northeast-2.amazonaws.com/open-mmlab/pretrain/third_party/vgg16_caffe-292e1171.pth' # Initialed by pretrained weight
   #
-  WEIGHT: "./model_GA_Sim10k.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/pretrained/grad_clip/Sim10k_ga_initlr_0.01_lr_decay_grad_clip/model_final.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
   #
   RPN_ONLY: True
   FCOS_ON: True
@@ -24,11 +24,14 @@ MODEL:
     CENTER_AWARE_WEIGHT: 20
     CENTER_AWARE_TYPE: "ca_feature" # or "ca_loss"
     #
+    COND_EXPAND: 0
     COND_SMOOTH: True
+    COND_WARMUP_ITER: 6000
+    COND_ALPHA: 0.0
     COND_CLASS: False
     COND_REG:
-      LEFT: True
-      TOP: False
+      LEFT: False
+      TOP: True
     #
     GA_DIS_LAMBDA: 0.01
     CA_DIS_LAMBDA: 0.1
@@ -91,7 +94,7 @@ DATALOADER:
   SIZE_DIVISIBILITY: 32
 SOLVER:
   WEIGHT_DECAY: 0.0001
-  MAX_ITER: 10000
+  MAX_ITER: 20000
   IMS_PER_BATCH: 16
   CHECKPOINT_PERIOD: 250
   #
