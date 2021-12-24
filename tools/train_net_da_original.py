@@ -603,8 +603,6 @@ def train(cfg, local_rank, distributed):
     )
     checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
 
-    seperate_dis = cfg.MODEL.ADV.SEPERATE_DIS
-    
     do_train(
         model,
         data_loader,
@@ -617,8 +615,7 @@ def train(cfg, local_rank, distributed):
         cfg,
         run_test,
         distributed,
-        writer,
-        seperate_dis
+        writer
     )
 
     return model

@@ -93,13 +93,15 @@ def do_train(
         cfg,
         run_test,
         distributed,
-        writer
+        writer,
+        seperate_dis
 ):
     USE_DIS_GLOBAL = arguments["use_dis_global"]
     USE_DIS_CENTER_AWARE = arguments["use_dis_ca"]
     USE_DIS_CONDITIONAL = arguments["use_dis_conditional"]
     USE_DIS_HEAD = arguments["use_dis_ha"]
     used_feature_layers = arguments["use_feature_layers"]
+    used_feature_layers = ['P7', 'P6', 'P5',  'P4', 'P3']
 
     # dataloader
     data_loader_source = data_loader["source"]
@@ -191,18 +193,31 @@ def do_train(
             # detatch score_map
             for map_type in score_maps_s[layer]:
                 score_maps_s[layer][map_type] = score_maps_s[layer][map_type].detach()
-            if USE_DIS_GLOBAL:
-                loss_dict["loss_adv_%s_ds" % layer] = \
-                    ga_dis_lambda * model["dis_%s" % layer](features_s[layer], source_label, domain='source')
-            if USE_DIS_CENTER_AWARE:
-                loss_dict["loss_adv_%s_CA_ds" % layer] = \
-                    ca_dis_lambda * model["dis_%s_CA" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source')
-            if USE_DIS_CONDITIONAL:
-                loss_dict["loss_adv_%s_Cond_ds" %layer] = \
-                    cond_dis_lambda * model["dis_%s_Cond" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha)
-            if USE_DIS_HEAD:
-                loss_dict["loss_adv_%s_HA_ds" % layer] = \
-                    ha_dis_lambda * model["dis_%s_HA" % layer](source_label, score_maps_s[layer], domain='source')
+            if seperate_dis:
+                if USE_DIS_GLOBAL:
+                    loss_dict["loss_adv_%s_ds" % layer] = \
+                        ga_dis_lambda * model["dis_%s" % layer](features_s[layer], source_label, domain='source')
+                if USE_DIS_CENTER_AWARE:
+                    loss_dict["loss_adv_%s_CA_ds" % layer] = \
+                        ca_dis_lambda * model["dis_%s_CA" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source')
+                if USE_DIS_CONDITIONAL:
+                    loss_dict["loss_adv_%s_Cond_ds" %layer] = \
+                        cond_dis_lambda * model["dis_%s_Cond" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha)
+                if USE_DIS_HEAD:
+                    loss_dict["loss_adv_%s_HA_ds" % layer] = \
+                        ha_dis_lambda * model["dis_%s_HA" % layer](source_label, score_maps_s[layer], domain='source')
+            else:
+                if USE_DIS_GLOBAL:
+                    loss_dict["loss_adv_%s_ds" % layer] = \
+                    ga_dis_lambda * model["dis_P7"](features_s[layer], source_label, domain='source')
+                if USE_DIS_CENTER_AWARE:
+                    loss_dict["loss_adv_%s_CA_ds" % layer] = \
+                    ca_dis_lambda * model["dis_P7_CA"](features_s[layer], source_label, score_maps_s[layer], domain='source')
+                if USE_DIS_CONDITIONAL:
+                    loss_dict["loss_adv_%s_Cond_ds" % layer] = \
+                    cond_dis_lambda * model["dis_P7_Cond"](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha)                                  if USE_DIS_HEAD:
+                    loss_dict["loss_adv_%s_HA_ds" % layer] = \
+                    ha_dis_lambda * model["dis_P7_HA"](source_label, score_maps_s[layer], domain='source')
 
         losses = sum(loss for loss in loss_dict.values())
 
@@ -252,18 +267,32 @@ def do_train(
             # detatch score_map
             for map_type in score_maps_t[layer]:
                 score_maps_t[layer][map_type] = score_maps_t[layer][map_type].detach()
-            if USE_DIS_GLOBAL:
-                loss_dict["loss_adv_%s_dt" % layer] = \
-                    ga_dis_lambda * model["dis_%s" % layer](features_t[layer], target_label, domain='target')
-            if USE_DIS_CENTER_AWARE:
-                loss_dict["loss_adv_%s_CA_dt" %layer] = \
-                    ca_dis_lambda * model["dis_%s_CA" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target')
-            if USE_DIS_CONDITIONAL:
-                loss_dict["loss_adv_%s_Cond_dt" %layer] = \
-                    cond_dis_lambda * model["dis_%s_Cond" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target', alpha=alpha)
-            if USE_DIS_HEAD:
-                loss_dict["loss_adv_%s_HA_dt" %layer] = \
-                    ha_dis_lambda * model["dis_%s_HA" % layer](target_label, score_maps_t[layer], domain='target')
+            if  seperate_dis:
+                if USE_DIS_GLOBAL:
+                    loss_dict["loss_adv_%s_dt" % layer] = \
+                        ga_dis_lambda * model["dis_%s" % layer](features_t[layer], target_label, domain='target')
+                if USE_DIS_CENTER_AWARE:
+                    loss_dict["loss_adv_%s_CA_dt" %layer] = \
+                        ca_dis_lambda * model["dis_%s_CA" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target')
+                if USE_DIS_CONDITIONAL:
+                    loss_dict["loss_adv_%s_Cond_dt" %layer] = \
+                        cond_dis_lambda * model["dis_%s_Cond" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target', alpha=alpha)
+                if USE_DIS_HEAD:
+                    loss_dict["loss_adv_%s_HA_dt" %layer] = \
+                        ha_dis_lambda * model["dis_%s_HA" % layer](target_label, score_maps_t[layer], domain='target')
+            else:
+                if USE_DIS_GLOBAL:
+                    loss_dict["loss_adv_%s_dt" % layer] = \
+                    ga_dis_lambda * model["dis_P7"](features_s[layer], source_label, domain='target')
+                if USE_DIS_CENTER_AWARE:
+                    loss_dict["loss_adv_%s_CA_dt" % layer] = \
+                    ca_dis_lambda * model["dis_P7_CA"](features_s[layer], source_label, score_maps_s[layer], domain='target')
+                if USE_DIS_CONDITIONAL:
+                    loss_dict["loss_adv_%s_Cond_dt" % layer] = \
+                    cond_dis_lambda * model["dis_P7_Cond"](features_s[layer], source_label, score_maps_s[layer], domain='target', alpha=alpha)                                  if USE_DIS_HEAD:
+                    loss_dict["loss_adv_%s_HA_dt" % layer] = \
+                    ha_dis_lambda * model["dis_P7_HA"](source_label, score_maps_s[layer], domain='target')
+
 
         losses = sum(loss for loss in loss_dict.values())
 
@@ -339,9 +368,15 @@ def do_train(
 
         sample_layer = used_feature_layers[0]  # sample any one of used feature layer
         if USE_DIS_GLOBAL:
-            sample_optimizer = optimizer["dis_%s" % sample_layer]
+            if seperate_dis:
+                sample_optimizer = optimizer["dis_%s" % sample_layer]
+            else:
+                sample_optimizer = optimizer["dis_P7"]
         if USE_DIS_CENTER_AWARE:
-            sample_optimizer = optimizer["dis_%s_CA" % sample_layer]
+            if seperate_ddis:
+                sample_optimizer = optimizer["dis_%s_CA" % sample_layer]
+            else:
+                sample_optimizer = optimizer["dis_P7_CA"]]
         if iteration % 20 == 0 or iteration == max_iter:
             logger.info(
                 meters.delimiter.join([

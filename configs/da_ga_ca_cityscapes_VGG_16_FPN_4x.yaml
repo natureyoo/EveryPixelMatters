@@ -18,6 +18,7 @@ MODEL:
     NMS_TH: 0.6           # nms_thresh        (default=0.6)
   ADV:
     #
+    SEPERATE_DIS: False
     USE_DIS_GLOBAL: True
     USE_DIS_CENTER_AWARE: False
     USE_DIS_CONDITIONAL: True
