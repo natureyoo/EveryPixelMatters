@@ -176,6 +176,8 @@ class FCOSDiscriminator_CondA(nn.Module):
                     stat /= stat.sum()
                     for bin_idx in range(3):
                         self.stat[domain][bin_idx] = 0.99 * self.stat[domain][bin_idx] + 0.01 * stat[bin_idx].item()
+                    if domain == 'source':
+                        box_cls_onehot = box_cls_onehot * (torch.tensor(self.stat['target']) / torch.tensor(self.stat['source'])).unsqueeze(0).cuda()
                     feature_['reg_t'] = torch.bmm(feature.unsqueeze(2), box_cls_onehot.unsqueeze(1))
                     feature_['reg_t'] = feature_['reg_t'].reshape(feature_['reg_t'].shape[0], -1).reshape(sh[0], sh[2], sh[3], -1).permute(0,3,1,2)
                     # feature_[key] = feature_[key] * centerness_map * entropy.unsqueeze(1)
