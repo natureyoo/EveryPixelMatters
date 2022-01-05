@@ -139,7 +139,6 @@ def do_train(
     best_map50 = 0.0
     for iteration, ((images_s, targets_s, _), (images_t, _, _)) \
         in enumerate(zip(data_loader_source, data_loader_target), start_iter):
-        import pdb; pdb.set_trace()
         data_time = time.time() - end
         iteration = iteration + 1
         arguments["iteration"] = iteration
@@ -189,6 +188,7 @@ def do_train(
         ##########################################################################
 
         loss_dict = {}
+        stat = {}
         for layer in used_feature_layers:
             # detatch score_map
             for map_type in score_maps_s[layer]:
@@ -201,8 +201,9 @@ def do_train(
                     loss_dict["loss_adv_%s_CA_ds" % layer] = \
                         ca_dis_lambda * model["dis_%s_CA" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source')
                 if USE_DIS_CONDITIONAL:
-                    loss_dict["loss_adv_%s_Cond_ds" %layer] = \
-                        cond_dis_lambda * model["dis_%s_Cond" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha)
+                    loss_dict["loss_adv_%s_Cond_ds" %layer], stat["%s_source" % layer] = \
+                        model["dis_%s_Cond" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha)
+                    loss_dict["loss_adv_%s_Cond_ds" %layer] *= cond_dis_lambda
                 if USE_DIS_HEAD:
                     loss_dict["loss_adv_%s_HA_ds" % layer] = \
                         ha_dis_lambda * model["dis_%s_HA" % layer](source_label, score_maps_s[layer], domain='source')
@@ -215,7 +216,8 @@ def do_train(
                     ca_dis_lambda * model["dis_P7_CA"](features_s[layer], source_label, score_maps_s[layer], domain='source')
                 if USE_DIS_CONDITIONAL:
                     loss_dict["loss_adv_%s_Cond_ds" % layer] = \
-                    cond_dis_lambda * model["dis_P7_Cond"](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha)                                  if USE_DIS_HEAD:
+                    cond_dis_lambda * model["dis_P7_Cond"](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha)
+                if USE_DIS_HEAD:
                     loss_dict["loss_adv_%s_HA_ds" % layer] = \
                     ha_dis_lambda * model["dis_P7_HA"](source_label, score_maps_s[layer], domain='source')
 
@@ -240,6 +242,9 @@ def do_train(
             writer.add_scalar('Loss_DISC/P5_Cond_ds', loss_dict['loss_adv_P5_Cond_ds'], iteration)
             writer.add_scalar('Loss_DISC/P6_Cond_ds', loss_dict['loss_adv_P6_Cond_ds'], iteration)
             writer.add_scalar('Loss_DISC/P7_Cond_ds', loss_dict['loss_adv_P7_Cond_ds'], iteration)
+            for layer in used_feature_layers:
+                for i in range(3):
+                    writer.add_scalar('Stat/{}/Source_{}'.format(layer, i), stat['%s_source' % layer][i], iteration)
         if USE_DIS_HEAD:
             writer.add_scalar('Loss_DISC/P3_HA_ds', loss_dict['loss_adv_P3_HA_ds'], iteration)
             writer.add_scalar('Loss_DISC/P4_HA_ds', loss_dict['loss_adv_P4_HA_ds'], iteration)
@@ -275,8 +280,9 @@ def do_train(
                     loss_dict["loss_adv_%s_CA_dt" %layer] = \
                         ca_dis_lambda * model["dis_%s_CA" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target')
                 if USE_DIS_CONDITIONAL:
-                    loss_dict["loss_adv_%s_Cond_dt" %layer] = \
-                        cond_dis_lambda * model["dis_%s_Cond" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target', alpha=alpha)
+                    loss_dict["loss_adv_%s_Cond_dt" %layer], stat["%s_target" % layer] = \
+                         model["dis_%s_Cond" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target', alpha=alpha)
+                    loss_dict["loss_adv_%s_Cond_dt" % layer] *= cond_dis_lambda
                 if USE_DIS_HEAD:
                     loss_dict["loss_adv_%s_HA_dt" %layer] = \
                         ha_dis_lambda * model["dis_%s_HA" % layer](target_label, score_maps_t[layer], domain='target')
@@ -289,7 +295,8 @@ def do_train(
                     ca_dis_lambda * model["dis_P7_CA"](features_s[layer], source_label, score_maps_s[layer], domain='target')
                 if USE_DIS_CONDITIONAL:
                     loss_dict["loss_adv_%s_Cond_dt" % layer] = \
-                    cond_dis_lambda * model["dis_P7_Cond"](features_s[layer], source_label, score_maps_s[layer], domain='target', alpha=alpha)                                  if USE_DIS_HEAD:
+                    cond_dis_lambda * model["dis_P7_Cond"](features_s[layer], source_label, score_maps_s[layer], domain='target', alpha=alpha)
+                if USE_DIS_HEAD:
                     loss_dict["loss_adv_%s_HA_dt" % layer] = \
                     ha_dis_lambda * model["dis_P7_HA"](source_label, score_maps_s[layer], domain='target')
 
@@ -317,6 +324,9 @@ def do_train(
             writer.add_scalar('Loss_DISC/P5_Cond_dt', loss_dict['loss_adv_P5_Cond_dt'], iteration)
             writer.add_scalar('Loss_DISC/P6_Cond_dt', loss_dict['loss_adv_P6_Cond_dt'], iteration)
             writer.add_scalar('Loss_DISC/P7_Cond_dt', loss_dict['loss_adv_P7_Cond_dt'], iteration)
+            for layer in used_feature_layers:
+                for i in range(3):
+                    writer.add_scalar('Stat/{}/Target_{}'.format(layer, i), stat['%s_target' % layer][i], iteration)
 
         if USE_DIS_HEAD:
             writer.add_scalar('Loss_DISC/P3_HA_dt', loss_dict['loss_adv_P3_HA_dt'], iteration)
@@ -373,10 +383,10 @@ def do_train(
             else:
                 sample_optimizer = optimizer["dis_P7"]
         if USE_DIS_CENTER_AWARE:
-            if seperate_ddis:
+            if seperate_dis:
                 sample_optimizer = optimizer["dis_%s_CA" % sample_layer]
             else:
-                sample_optimizer = optimizer["dis_P7_CA"]]
+                sample_optimizer = optimizer["dis_P7_CA"]
         if iteration % 20 == 0 or iteration == max_iter:
             logger.info(
                 meters.delimiter.join([

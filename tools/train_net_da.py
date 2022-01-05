@@ -116,7 +116,8 @@ def train(cfg, local_rank, distributed):
                 class_align=cfg.MODEL.ADV.COND_CLASS,
                 reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
                 reg_top_align=cfg.MODEL.ADV.COND_REG.TOP,
-                expand_dim=cfg.MODEL.ADV.COND_EXPAND).to(device)
+                expand_dim=cfg.MODEL.ADV.COND_EXPAND,
+                level='P7').to(device)
         if cfg.MODEL.ADV.USE_DIS_P6:
             dis_P6_Cond = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P6_NUM_CONVS,
@@ -127,7 +128,8 @@ def train(cfg, local_rank, distributed):
                 class_align=cfg.MODEL.ADV.COND_CLASS,
                 reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
                 reg_top_align=cfg.MODEL.ADV.COND_REG.TOP,
-                expand_dim=cfg.MODEL.ADV.COND_EXPAND).to(device)
+                expand_dim=cfg.MODEL.ADV.COND_EXPAND,
+                level='P6').to(device)
         if cfg.MODEL.ADV.USE_DIS_P5:
             dis_P5_Cond = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P5_NUM_CONVS,
@@ -138,7 +140,8 @@ def train(cfg, local_rank, distributed):
                 class_align=cfg.MODEL.ADV.COND_CLASS,
                 reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
                 reg_top_align=cfg.MODEL.ADV.COND_REG.TOP,
-                expand_dim=cfg.MODEL.ADV.COND_EXPAND).to(device)
+                expand_dim=cfg.MODEL.ADV.COND_EXPAND,
+                level='P5').to(device)
         if cfg.MODEL.ADV.USE_DIS_P4:
             dis_P4_Cond = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P4_NUM_CONVS,
@@ -149,7 +152,8 @@ def train(cfg, local_rank, distributed):
                 class_align=cfg.MODEL.ADV.COND_CLASS,
                 reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
                 reg_top_align=cfg.MODEL.ADV.COND_REG.TOP,
-                expand_dim=cfg.MODEL.ADV.COND_EXPAND).to(device)
+                expand_dim=cfg.MODEL.ADV.COND_EXPAND,
+                level='P4').to(device)
         if cfg.MODEL.ADV.USE_DIS_P3:
             dis_P3_Cond = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P3_NUM_CONVS,
@@ -160,7 +164,8 @@ def train(cfg, local_rank, distributed):
                 class_align=cfg.MODEL.ADV.COND_CLASS,
                 reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
                 reg_top_align=cfg.MODEL.ADV.COND_REG.TOP,
-                expand_dim=cfg.MODEL.ADV.COND_EXPAND).to(device)
+                expand_dim=cfg.MODEL.ADV.COND_EXPAND,
+                level='P3').to(device)
 
     if cfg.MODEL.ADV.USE_DIS_HEAD:
         if cfg.MODEL.ADV.USE_DIS_P7:

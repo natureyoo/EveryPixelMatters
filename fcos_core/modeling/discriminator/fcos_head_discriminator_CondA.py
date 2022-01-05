@@ -6,7 +6,9 @@ from .layer import GradientReversal
 
 
 class FCOSDiscriminator_CondA(nn.Module):
-    def __init__(self, num_convs=2, in_channels=256, grad_reverse_lambda=-1.0, center_aware_weight=0.0, center_aware_type='ca_loss', grl_applied_domain='both', class_align=False, reg_left_align=False, reg_top_align=False, expand_dim=0):
+    def __init__(self, num_convs=2, in_channels=256, grad_reverse_lambda=-1.0, center_aware_weight=0.0, \
+                 center_aware_type='ca_loss', grl_applied_domain='both', class_align=False, reg_left_align=False, \
+                 reg_top_align=False, expand_dim=0, level='P3'):
         """
         Arguments:
             in_channels (int): number of channels of the input feature
@@ -22,8 +24,23 @@ class FCOSDiscriminator_CondA(nn.Module):
         self.reg_left_align = reg_left_align
         self.reg_top_align = reg_top_align
         # self.bin_mean = torch.tensor([32, 64, 128]).cuda()
-        self.bin_mean = torch.tensor([8, 24, 40]).cuda()
-        self.bin_std = torch.tensor([16, 16, 16]).cuda()
+        if level == 'P3':
+            # self.bin_mean = torch.tensor([4,12,20]).cuda()
+            self.bin_mean = torch.tensor([12,20,44]).cuda()
+        elif level == 'P4':
+            self.bin_mean = torch.tensor([12,20,44]).cuda()
+            # self.bin_mean = torch.tensor([20,44,84]).cuda()
+        elif level == 'P5':
+            self.bin_mean = torch.tensor([20,44,84]).cuda()
+            # self.bin_mean = torch.tensor([44,84,172]).cuda()
+        elif level == 'P6':
+            self.bin_mean = torch.tensor([44,84,172]).cuda()
+            # self.bin_mean = torch.tensor([84,172,340]).cuda()
+        else:
+            self.bin_mean = torch.tensor([44,84,172]).cuda()
+            # self.bin_mean = torch.tensor([84,172,340]).cuda()
+        self.bin_std = self.bin_mean / 4
+        self.stat = {'source': [1/3, 1/3, 1/3], 'target': [1/3, 1/3, 1/3]}
         if expand_dim > 0:
             self.expand = True
             self.outer_num = expand_dim
@@ -108,7 +125,8 @@ class FCOSDiscriminator_CondA(nn.Module):
         maxpooling = nn.AdaptiveMaxPool3d((1, h, w))
         box_cls_map = maxpooling(box_cls_map)
         # Normalize the center-aware map
-        atten_map = self.center_aware_weight * box_cls_map * centerness_map
+        # atten_map = self.center_aware_weight * box_cls_map * centerness_map
+        atten_map = self.center_aware_weight * box_cls_map
         ############ feature dimension expand ############
         if self.expand:
             feature = torch.bmm(feature.unsqueeze(2), torch.ones(n*h*w, 1, self.outer_num).cuda() / self.outer_num)
@@ -131,21 +149,33 @@ class FCOSDiscriminator_CondA(nn.Module):
                 box_regression_map = box_regression_map.permute(0,2,3,1).reshape(-1, 4)     # (528,4)
                 # box_cls_gt = (box_regression_map.unsqueeze(-1) - self.bin_mean.reshape(1,1,-1)) ** 2/(2*self.bin_std.reshape(1,1,-1)**2)
                 box_cls_gt = (box_regression_map.unsqueeze(-1) - self.bin_mean.reshape(1,1,-1)) ** 2
-                box_cls_gt = torch.argmin(box_cls_gt, dim=-1)
+                # box_cls_gt = torch.argmin(box_cls_gt, dim=-1)
                 if self.reg_left_align:
-                    box_cls_onehot = torch.FloatTensor(box_cls_gt.shape[0], 3).cuda()
-                    box_cls_onehot.zero_()
-                    box_cls_onehot.scatter_(1, box_cls_gt[:, 0].reshape(-1, 1), 1)
-                    box_cls_onehot = alpha * torch.ones(box_cls_onehot.shape).cuda() / 3 + (1 - alpha) * box_cls_onehot
+                    # box_cls_onehot = torch.FloatTensor(box_cls_gt.shape[0], 3).cuda()
+                    # box_cls_onehot.zero_()
+                    # box_cls_onehot.scatter_(1, box_cls_gt[:, 0].reshape(-1, 1), 1)
+                    # box_cls_onehot = alpha * torch.ones(box_cls_onehot.shape).cuda() / 3 + (1 - alpha) * box_cls_onehot
+                    box_cls_onehot = - box_cls_gt[:, 0] / self.bin_std.reshape(1, -1) ** 2
+                    box_cls_onehot = torch.nn.Softmax(dim=1)(box_cls_onehot)
+                    stat = (atten_map.permute(0,2,3,1).reshape(-1,1) * box_cls_onehot).sum(dim=0)
+                    stat /= stat.sum()
+                    for bin_idx in range(3):
+                        self.stat[domain][bin_idx] = 0.99 * self.stat[domain][bin_idx] + 0.01 * stat[bin_idx].item()
                     feature_['reg_l'] = torch.bmm(feature.unsqueeze(2), box_cls_onehot.unsqueeze(1))
                     feature_['reg_l'] = feature_['reg_l'].reshape(feature_['reg_l'].shape[0], -1).reshape(sh[0], sh[2], sh[3], -1).permute(0,3,1,2)
                     # feature_[key] = feature_[key] * centerness_map * entropy.unsqueeze(1)
                     feature_['reg_l'] = feature_['reg_l'] * atten_map
                 if self.reg_top_align:
-                    box_cls_onehot = torch.FloatTensor(box_cls_gt.shape[0], 3).cuda()
-                    box_cls_onehot.zero_()
-                    box_cls_onehot.scatter_(1, box_cls_gt[:, 1].reshape(-1, 1), 1)
-                    box_cls_onehot = alpha * torch.ones(box_cls_onehot.shape).cuda() / 3 + (1 - alpha) * box_cls_onehot
+                    # box_cls_onehot = torch.FloatTensor(box_cls_gt.shape[0], 3).cuda()
+                    # box_cls_onehot.zero_()
+                    # box_cls_onehot.scatter_(1, box_cls_gt[:, 1].reshape(-1, 1), 1)
+                    # box_cls_onehot = alpha * torch.ones(box_cls_onehot.shape).cuda() / 3 + (1 - alpha) * box_cls_onehot
+                    box_cls_onehot = - box_cls_gt[:, 1] / self.bin_std.reshape(1,-1) ** 2
+                    box_cls_onehot = torch.nn.Softmax(dim=1)(box_cls_onehot)
+                    stat = (atten_map.permute(0,2,3,1).reshape(-1,1) * box_cls_onehot).sum(dim=0)
+                    stat /= stat.sum()
+                    for bin_idx in range(3):
+                        self.stat[domain][bin_idx] = 0.99 * self.stat[domain][bin_idx] + 0.01 * stat[bin_idx].item()
                     feature_['reg_t'] = torch.bmm(feature.unsqueeze(2), box_cls_onehot.unsqueeze(1))
                     feature_['reg_t'] = feature_['reg_t'].reshape(feature_['reg_t'].shape[0], -1).reshape(sh[0], sh[2], sh[3], -1).permute(0,3,1,2)
                     # feature_[key] = feature_[key] * centerness_map * entropy.unsqueeze(1)
@@ -166,4 +196,4 @@ class FCOSDiscriminator_CondA(nn.Module):
         # loss = self.loss_fn(x, target)
         loss = torch.mean((x - target) ** 2)
 
-        return loss
+        return loss, self.stat[domain]
