@@ -26,20 +26,27 @@ class FCOSDiscriminator_CondA(nn.Module):
         # self.bin_mean = torch.tensor([32, 64, 128]).cuda()
         if level == 'P3':
             # self.bin_mean = torch.tensor([4,12,20]).cuda()
-            self.bin_mean = torch.tensor([12,20,44]).cuda()
+            # self.bin_mean = torch.tensor([12,20,44]).cuda()
+            self.bin_mean = torch.tensor([2.5,3.5,4.5]).cuda()
         elif level == 'P4':
-            self.bin_mean = torch.tensor([12,20,44]).cuda()
+            # self.bin_mean = torch.tensor([12,20,44]).cuda()
             # self.bin_mean = torch.tensor([20,44,84]).cuda()
+            self.bin_mean = torch.tensor([3.5,4.5,5.5]).cuda()
         elif level == 'P5':
-            self.bin_mean = torch.tensor([20,44,84]).cuda()
+            # self.bin_mean = torch.tensor([20,44,84]).cuda()
             # self.bin_mean = torch.tensor([44,84,172]).cuda()
+            self.bin_mean = torch.tensor([4.5,5.5,6.5]).cuda()
         elif level == 'P6':
-            self.bin_mean = torch.tensor([44,84,172]).cuda()
+            # self.bin_mean = torch.tensor([44,84,172]).cuda()
             # self.bin_mean = torch.tensor([84,172,340]).cuda()
+            self.bin_mean = torch.tensor([5.5,6.5,7.5]).cuda()
         else:
-            self.bin_mean = torch.tensor([44,84,172]).cuda()
+            # self.bin_mean = torch.tensor([44,84,172]).cuda()
             # self.bin_mean = torch.tensor([84,172,340]).cuda()
-        self.bin_std = self.bin_mean / 4
+            self.bin_mean = torch.tensor([6.5,7.5,8.5]).cuda()
+        #self.bin_std = self.bin_mean / 4
+        self.bin_std = torch.tensor([0.1,0.1,0.1]).cuda()
+        self.tau = 0.1
         self.stat = {'source': [1/3, 1/3, 1/3], 'target': [1/3, 1/3, 1/3]}
         if expand_dim > 0:
             self.expand = True
@@ -148,7 +155,8 @@ class FCOSDiscriminator_CondA(nn.Module):
             if self.reg_left_align or self.reg_top_align:
                 box_regression_map = box_regression_map.permute(0,2,3,1).reshape(-1, 4)     # (528,4)
                 # box_cls_gt = (box_regression_map.unsqueeze(-1) - self.bin_mean.reshape(1,1,-1)) ** 2/(2*self.bin_std.reshape(1,1,-1)**2)
-                box_cls_gt = (box_regression_map.unsqueeze(-1) - self.bin_mean.reshape(1,1,-1)) ** 2
+                # box_cls_gt = (box_regression_map.unsqueeze(-1) - self.bin_mean.reshape(1,1,-1)) ** 2
+                box_cls_gt = (torch.log2(box_regression_map.unsqueeze(-1)) - self.bin_mean.reshape(1,1,-1)) ** 2
                 # box_cls_gt = torch.argmin(box_cls_gt, dim=-1)
                 if self.reg_left_align:
                     # box_cls_onehot = torch.FloatTensor(box_cls_gt.shape[0], 3).cuda()
@@ -170,8 +178,10 @@ class FCOSDiscriminator_CondA(nn.Module):
                     # box_cls_onehot.zero_()
                     # box_cls_onehot.scatter_(1, box_cls_gt[:, 1].reshape(-1, 1), 1)
                     # box_cls_onehot = alpha * torch.ones(box_cls_onehot.shape).cuda() / 3 + (1 - alpha) * box_cls_onehot
-                    box_cls_onehot = - box_cls_gt[:, 1] / self.bin_std.reshape(1,-1) ** 2
-                    box_cls_onehot = torch.nn.Softmax(dim=1)(box_cls_onehot)
+                    # box_cls_onehot = - box_cls_gt[:, 1] / self.bin_std.reshape(1,-1) ** 2
+                    box_cls_onehot = - box_cls_gt[:, 1] / (2 * self.bin_std.reshape(1, -1) ** 2)
+                    box_cls_onehot = torch.nn.Softmax(dim=1)(box_cls_onehot/self.tau)
+                    box_cls_onehot = alpha * torch.ones(box_cls_onehot.shape).cuda() / 3 + (1 - alpha) * box_cls_onehot
                     stat = (atten_map.permute(0,2,3,1).reshape(-1,1) * box_cls_onehot).sum(dim=0)
                     stat /= stat.sum()
                     for bin_idx in range(3):
