@@ -164,9 +164,10 @@ def do_train(
 
         loss_dict, features_s, score_maps_s = foward_detector(
             model, images_s, targets=targets_s, return_maps=True)
-
+        labels = loss_dict['labels']
+        reg_targets = loss_dict['reg_targets']
         # rename loss to indicate domain
-        loss_dict = {k + "_gs": loss_dict[k] for k in loss_dict}
+        loss_dict = {k + "_gs": loss_dict[k] for k in loss_dict if 'loss' in k}
 
         losses = sum(loss for loss in loss_dict.values())
 
@@ -202,7 +203,7 @@ def do_train(
                         ca_dis_lambda * model["dis_%s_CA" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source')
                 if USE_DIS_CONDITIONAL:
                     loss_dict["loss_adv_%s_Cond_ds" %layer], stat["%s_source" % layer] = \
-                        model["dis_%s_Cond" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha)
+                        model["dis_%s_Cond" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha, labels=labels[int(layer[1])-3], reg_targets=reg_targets[int(layer[1])-3])
                     loss_dict["loss_adv_%s_Cond_ds" %layer] *= cond_dis_lambda
                 if USE_DIS_HEAD:
                     loss_dict["loss_adv_%s_HA_ds" % layer] = \

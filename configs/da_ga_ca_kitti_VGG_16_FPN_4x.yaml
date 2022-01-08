@@ -2,7 +2,7 @@ MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
   # WEIGHT: 'https://s3.ap-northeast-2.amazonaws.com/open-mmlab/pretrain/third_party/vgg16_caffe-292e1171.pth' # Initialed by pretrained weight
   #
-  WEIGHT: "./model_GA.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/pretrained/grad_clip/KITTI_ga_initlr_0.005_grad_clip/model_final.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
   #
   RPN_ONLY: True
   FCOS_ON: True
@@ -18,17 +18,21 @@ MODEL:
     NMS_TH: 0.6           # nms_thresh        (default=0.6)
   ADV:
     #
+    SEPERATE_DIS: True
     USE_DIS_GLOBAL: True
     USE_DIS_CENTER_AWARE: False
     USE_DIS_CONDITIONAL: True
     CENTER_AWARE_WEIGHT: 20
     CENTER_AWARE_TYPE: "ca_feature" # or "ca_loss"
     #
+    COND_EXPAND: 0
     COND_SMOOTH: True
+    COND_WARMUP_ITER: 6000
+    COND_ALPHA: 0.2
     COND_CLASS: False
     COND_REG:
-      LEFT: True
-      TOP: False
+      LEFT: False
+      TOP: True
     #
     GA_DIS_LAMBDA: 0.1
     CA_DIS_LAMBDA: 0.1
@@ -52,11 +56,17 @@ MODEL:
     CA_DIS_P4_NUM_CONVS: 4
     CA_DIS_P3_NUM_CONVS: 4
     #
-    GRL_WEIGHT_P7: 0.01
-    GRL_WEIGHT_P6: 0.01
-    GRL_WEIGHT_P5: 0.01
-    GRL_WEIGHT_P4: 0.01
-    GRL_WEIGHT_P3: 0.01
+    COND_DIS_P7_NUM_CONVS: 4
+    COND_DIS_P6_NUM_CONVS: 4
+    COND_DIS_P5_NUM_CONVS: 4
+    COND_DIS_P4_NUM_CONVS: 4
+    COND_DIS_P3_NUM_CONVS: 4
+    #
+    GRL_WEIGHT_P7: 0.02
+    GRL_WEIGHT_P6: 0.02
+    GRL_WEIGHT_P5: 0.02
+    GRL_WEIGHT_P4: 0.02
+    GRL_WEIGHT_P3: 0.02
     #
     CA_GRL_WEIGHT_P7: 0.02
     CA_GRL_WEIGHT_P6: 0.02
@@ -72,7 +82,7 @@ MODEL:
 TEST:
   DETECTIONS_PER_IMG: 100 # fpn_post_nms_top_n  (default=100)
 DATASETS:
-  TRAIN_SOURCE: ("kitti_train_caronly", ) 
+  TRAIN_SOURCE: ("kitti_train_caronly", )
   TRAIN_TARGET: ("cityscapes_train_caronly_cocostyle", )
   TEST: ("cityscapes_val_caronly_cocostyle", )
 INPUT:

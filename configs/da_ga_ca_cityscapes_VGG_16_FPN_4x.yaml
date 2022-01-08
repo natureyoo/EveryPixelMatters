@@ -32,8 +32,8 @@ MODEL:
     COND_ALPHA: 0.0
     COND_CLASS: False
     COND_REG:
-      LEFT: True
-      TOP: False
+      LEFT: False
+      TOP: True
     #
     GA_DIS_LAMBDA: 0.01
     CA_DIS_LAMBDA: 0.1
@@ -98,7 +98,7 @@ MODEL:
 TEST:
   DETECTIONS_PER_IMG: 100 # fpn_post_nms_top_n  (default=100)
 DATASETS:
-  TRAIN_SOURCE: ("cityscapes_train_cocostyle", ) 
+  TRAIN_SOURCE: ("cityscapes_foggy_train_cocostyle", )
   TRAIN_TARGET: ("cityscapes_foggy_train_cocostyle", )
   TEST: ("cityscapes_foggy_val_cocostyle", )
 INPUT:
@@ -111,7 +111,7 @@ DATALOADER:
 SOLVER:
   WEIGHT_DECAY: 0.0001
   MAX_ITER: 20000
-  IMS_PER_BATCH: 16
+  IMS_PER_BATCH: 8
   CHECKPOINT_PERIOD: 500
   #
   BACKBONE:

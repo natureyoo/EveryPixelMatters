@@ -147,13 +147,15 @@ class FCOSModule(torch.nn.Module):
         }
         losses = {}
         if targets is not None:
-            loss_box_cls, loss_box_reg, loss_centerness = self.loss_evaluator(
+            loss_box_cls, loss_box_reg, loss_centerness, labels, reg_targets = self.loss_evaluator(
                 locations, box_cls, box_regression, centerness, targets
             )
             losses = {
                 "loss_cls": loss_box_cls,
                 "loss_reg": loss_box_reg,
-                "loss_centerness": loss_centerness
+                "loss_centerness": loss_centerness,
+                "labels": labels,
+                "reg_targets": reg_targets
             }
         else:
             losses = {

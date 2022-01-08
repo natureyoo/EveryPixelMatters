@@ -184,7 +184,7 @@ class FCOSLossComputation(object):
             reg_loss = box_regression_flatten.sum()
             centerness_loss = centerness_flatten.sum()
 
-        return cls_loss, reg_loss, centerness_loss
+        return cls_loss, reg_loss, centerness_loss, labels, reg_targets
 
 
 def make_fcos_loss_evaluator(cfg):

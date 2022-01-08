@@ -111,7 +111,7 @@ class FCOSDiscriminator_CondA(nn.Module):
         assert grl_applied_domain == 'both' or grl_applied_domain == 'target'
         self.grl_applied_domain = grl_applied_domain
 
-    def forward(self, feature, target, score_map=None, domain='source', alpha=0.0):
+    def forward(self, feature, target, score_map=None, domain='source', alpha=0.0, labels=None, reg_targets=None):
         assert target == 0 or target == 1 or target == 0.1 or target == 0.9
         assert domain == 'source' or domain == 'target'
 
@@ -122,7 +122,6 @@ class FCOSDiscriminator_CondA(nn.Module):
         box_regression_map = score_map["box_regression"]
         sh = feature.shape
         feature = feature.permute(0,2,3,1).reshape(-1, self.embed_dim)
-
         if self.random_embed is not None:
             feature = torch.mm(feature, self.random_embed)
             feature = feature / self.embed_dim ** 0.5
@@ -133,7 +132,10 @@ class FCOSDiscriminator_CondA(nn.Module):
         box_cls_map = maxpooling(box_cls_map)
         # Normalize the center-aware map
         # atten_map = self.center_aware_weight * box_cls_map * centerness_map
-        atten_map = self.center_aware_weight * box_cls_map
+        if labels is not None:
+            atten_map = self.center_aware_weight * box_cls_map * (labels.reshape(n, 1, h, w) > 0)
+        else:
+            atten_map = self.center_aware_weight * box_cls_map * (box_cls_map > 0.5)
         ############ feature dimension expand ############
         if self.expand:
             feature = torch.bmm(feature.unsqueeze(2), torch.ones(n*h*w, 1, self.outer_num).cuda() / self.outer_num)
@@ -153,7 +155,12 @@ class FCOSDiscriminator_CondA(nn.Module):
 
             ############ feature * regression binning outer product ############
             if self.reg_left_align or self.reg_top_align:
-                box_regression_map = box_regression_map.permute(0,2,3,1).reshape(-1, 4)     # (528,4)
+                if reg_targets is not None:
+                    reg_targets[reg_targets < 1] = 1.
+                    box_regression_map = reg_targets
+                else:
+                    box_regression_map = box_regression_map.permute(0,2,3,1).reshape(-1, 4)     # (528,4)
+
                 # box_cls_gt = (box_regression_map.unsqueeze(-1) - self.bin_mean.reshape(1,1,-1)) ** 2/(2*self.bin_std.reshape(1,1,-1)**2)
                 # box_cls_gt = (box_regression_map.unsqueeze(-1) - self.bin_mean.reshape(1,1,-1)) ** 2
                 box_cls_gt = (torch.log2(box_regression_map.unsqueeze(-1)) - self.bin_mean.reshape(1,1,-1)) ** 2
@@ -183,11 +190,12 @@ class FCOSDiscriminator_CondA(nn.Module):
                     box_cls_onehot = torch.nn.Softmax(dim=1)(box_cls_onehot/self.tau)
                     box_cls_onehot = alpha * torch.ones(box_cls_onehot.shape).cuda() / 3 + (1 - alpha) * box_cls_onehot
                     stat = (atten_map.permute(0,2,3,1).reshape(-1,1) * box_cls_onehot).sum(dim=0)
-                    stat /= stat.sum()
+                    if stat.sum() > 0:
+                        stat /= stat.sum()
                     for bin_idx in range(3):
                         self.stat[domain][bin_idx] = 0.99 * self.stat[domain][bin_idx] + 0.01 * stat[bin_idx].item()
-                    if domain == 'source':
-                        box_cls_onehot = box_cls_onehot * (torch.tensor(self.stat['target']) / torch.tensor(self.stat['source'])).unsqueeze(0).cuda()
+                    # if domain == 'source':
+                    #     box_cls_onehot = box_cls_onehot * (torch.tensor(self.stat['target']) / torch.tensor(self.stat['source'])).unsqueeze(0).cuda()
                     feature_['reg_t'] = torch.bmm(feature.unsqueeze(2), box_cls_onehot.unsqueeze(1))
                     feature_['reg_t'] = feature_['reg_t'].reshape(feature_['reg_t'].shape[0], -1).reshape(sh[0], sh[2], sh[3], -1).permute(0,3,1,2)
                     # feature_[key] = feature_[key] * centerness_map * entropy.unsqueeze(1)
