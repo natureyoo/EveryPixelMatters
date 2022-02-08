@@ -137,12 +137,15 @@ def do_train(
     end = time.time()
     pytorch_1_1_0_or_later = is_pytorch_1_1_0_or_later()
     best_map50 = 0.0
+    # results = run_test(cfg, model, distributed)
+    # exit()
     for iteration, ((images_s, targets_s, _), (images_t, _, _)) \
         in enumerate(zip(data_loader_source, data_loader_target), start_iter):
         data_time = time.time() - end
         iteration = iteration + 1
         arguments["iteration"] = iteration
         alpha = max(1 - iteration / cfg.MODEL.ADV.COND_WARMUP_ITER, cfg.MODEL.ADV.COND_ALPHA) if cfg.MODEL.ADV.COND_SMOOTH else cfg.MODEL.ADV.COND_ALPHA
+        cf_th = cfg.MODEL.ADV.COND_CONF
         # in pytorch >= 1.1.0, scheduler.step() should be run after optimizer.step()
         if not pytorch_1_1_0_or_later:
             # scheduler.step()
@@ -203,7 +206,7 @@ def do_train(
                         ca_dis_lambda * model["dis_%s_CA" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source')
                 if USE_DIS_CONDITIONAL:
                     loss_dict["loss_adv_%s_Cond_ds" %layer], stat["%s_source" % layer] = \
-                        model["dis_%s_Cond" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha, labels=labels[int(layer[1])-3], reg_targets=reg_targets[int(layer[1])-3])
+                        model["dis_%s_Cond" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha, labels=labels[int(layer[1])-3], reg_targets=reg_targets[int(layer[1])-3], conf_th=cf_th)
                     loss_dict["loss_adv_%s_Cond_ds" %layer] *= cond_dis_lambda
                 if USE_DIS_HEAD:
                     loss_dict["loss_adv_%s_HA_ds" % layer] = \
@@ -244,7 +247,7 @@ def do_train(
             writer.add_scalar('Loss_DISC/P6_Cond_ds', loss_dict['loss_adv_P6_Cond_ds'], iteration)
             writer.add_scalar('Loss_DISC/P7_Cond_ds', loss_dict['loss_adv_P7_Cond_ds'], iteration)
             for layer in used_feature_layers:
-                for i in range(3):
+                for i in range(4):
                     writer.add_scalar('Stat/{}/Source_{}'.format(layer, i), stat['%s_source' % layer][i], iteration)
         if USE_DIS_HEAD:
             writer.add_scalar('Loss_DISC/P3_HA_ds', loss_dict['loss_adv_P3_HA_ds'], iteration)
@@ -282,7 +285,7 @@ def do_train(
                         ca_dis_lambda * model["dis_%s_CA" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target')
                 if USE_DIS_CONDITIONAL:
                     loss_dict["loss_adv_%s_Cond_dt" %layer], stat["%s_target" % layer] = \
-                         model["dis_%s_Cond" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target', alpha=alpha)
+                         model["dis_%s_Cond" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target', alpha=alpha, conf_th=cf_th)
                     loss_dict["loss_adv_%s_Cond_dt" % layer] *= cond_dis_lambda
                 if USE_DIS_HEAD:
                     loss_dict["loss_adv_%s_HA_dt" %layer] = \
@@ -326,7 +329,7 @@ def do_train(
             writer.add_scalar('Loss_DISC/P6_Cond_dt', loss_dict['loss_adv_P6_Cond_dt'], iteration)
             writer.add_scalar('Loss_DISC/P7_Cond_dt', loss_dict['loss_adv_P7_Cond_dt'], iteration)
             for layer in used_feature_layers:
-                for i in range(3):
+                for i in range(4):
                     writer.add_scalar('Stat/{}/Target_{}'.format(layer, i), stat['%s_target' % layer][i], iteration)
 
         if USE_DIS_HEAD:
@@ -481,7 +484,8 @@ def do_train_base(
             model, images_s, targets=targets_s, return_maps=True)
 
         # rename loss to indicate domain
-        loss_dict = {k + "_gs": loss_dict[k] for k in loss_dict}
+        # loss_dict = {k + "_gs": loss_dict[k] for k in loss_dict}
+        loss_dict = {k + "_gs": loss_dict[k] for k in loss_dict if 'loss' in k}
 
         losses = sum(loss for loss in loss_dict.values())
 
@@ -501,9 +505,9 @@ def do_train_base(
         ##########################################################################
         ##########################################################################
         ##########################################################################
-        max_norm = 5
-        for k in model:
-            torch.nn.utils.clip_grad_norm_(model[k].parameters(), max_norm)
+        # max_norm = 5
+        # for k in model:
+        #     torch.nn.utils.clip_grad_norm_(model[k].parameters(), max_norm)
 
         # optimizer.step()
         for k in optimizer:

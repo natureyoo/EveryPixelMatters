@@ -188,6 +188,7 @@ def make_data_loader_source(cfg, is_train=True, is_distributed=False, start_iter
         images_per_gpu = images_per_batch // num_gpus
         shuffle = True
         num_iters = cfg.SOLVER.MAX_ITER
+        # num_iters = None
     else:
         images_per_batch = cfg.TEST.IMS_PER_BATCH
         assert (
@@ -261,6 +262,7 @@ def make_data_loader_target(cfg, is_train=True, is_distributed=False, start_iter
         images_per_gpu = images_per_batch // num_gpus
         shuffle = True
         num_iters = cfg.SOLVER.MAX_ITER
+        # num_iters = None
     else:
         images_per_batch = cfg.TEST.IMS_PER_BATCH
         assert (
