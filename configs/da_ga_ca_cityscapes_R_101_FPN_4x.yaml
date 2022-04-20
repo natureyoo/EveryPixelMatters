@@ -1,8 +1,8 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  # WEIGHT: "catalog://ImageNetPretrained/MSRA/R-101" # Initialed by pretrained weight
+  WEIGHT: "catalog://ImageNetPretrained/MSRA/R-101" # Initialed by pretrained weight
   #
-  WEIGHT: "./model_GA.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: "./model_GA.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
   #
   RPN_ONLY: True
   FCOS_ON: True
@@ -22,11 +22,22 @@ MODEL:
     #
     USE_DIS_GLOBAL: True
     USE_DIS_CENTER_AWARE: True
+    USE_DIS_CONDITIONAL: True
     CENTER_AWARE_WEIGHT: 20
     CENTER_AWARE_TYPE: "ca_feature" # or "ca_loss"
     #
+    COND_EXPAND: 0
+    COND_SMOOTH: True
+    COND_WARMUP_ITER: 6000
+    COND_ALPHA: 0.2
+    COND_CLASS: False
+    COND_REG:
+      LEFT: True
+      TOP: True
+    #
     GA_DIS_LAMBDA: 0.01
     CA_DIS_LAMBDA: 0.1
+    COND_DIS_LAMBDA: 0.1
     GRL_APPLIED_DOMAIN: 'both'
     #
     USE_DIS_P7: True
@@ -47,6 +58,12 @@ MODEL:
     CA_DIS_P4_NUM_CONVS: 4
     CA_DIS_P3_NUM_CONVS: 4
     #
+    COND_DIS_P7_NUM_CONVS: 4
+    COND_DIS_P6_NUM_CONVS: 4
+    COND_DIS_P5_NUM_CONVS: 4
+    COND_DIS_P4_NUM_CONVS: 4
+    COND_DIS_P3_NUM_CONVS: 4
+    #
     GRL_WEIGHT_P7: 0.02
     GRL_WEIGHT_P6: 0.02
     GRL_WEIGHT_P5: 0.02
@@ -58,6 +75,12 @@ MODEL:
     CA_GRL_WEIGHT_P5: 0.02
     CA_GRL_WEIGHT_P4: 0.02
     CA_GRL_WEIGHT_P3: 0.02
+    #
+    COND_GRL_WEIGHT_P7: 0.2
+    COND_GRL_WEIGHT_P6: 0.2
+    COND_GRL_WEIGHT_P5: 0.2
+    COND_GRL_WEIGHT_P4: 0.2
+    COND_GRL_WEIGHT_P3: 0.2
 TEST:
   DETECTIONS_PER_IMG: 100 # fpn_post_nms_top_n  (default=100)
 DATASETS:
@@ -78,19 +101,19 @@ SOLVER:
   CHECKPOINT_PERIOD: 500
   #
   BACKBONE:
-    BASE_LR: 0.005
-    STEPS: (120000, 160000)
+    BASE_LR: 0.02
+    STEPS: (12000, 18000)
     WARMUP_ITERS: 500
     WARMUP_METHOD: "constant"
   #
   FCOS:
-    BASE_LR: 0.005
-    STEPS: (120000, 160000)
+    BASE_LR: 0.02
+    STEPS: (12000, 18000)
     WARMUP_ITERS: 500
     WARMUP_METHOD: "constant"
   #
   DIS:
-    BASE_LR: 0.005
-    STEPS: (120000, 160000)
+    BASE_LR: 0.02
+    STEPS: (12000, 18000)
     WARMUP_ITERS: 500
     WARMUP_METHOD: "constant"

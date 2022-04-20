@@ -1,8 +1,17 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  # WEIGHT: 'https://s3.ap-northeast-2.amazonaws.com/open-mmlab/pretrain/third_party/vgg16_caffe-292e1171.pth' # Initialed by pretrained weight
+#  WEIGHT: '/home/jayeon/Documents/EveryPixelMatters/pretrained/vgg16_caffe-292e1171.pth' # Initialed by pretrained weight
+#  WEIGHT: '/home/jayeon/Documents/MLVU/EveryPixelMatters/training_dir/GA_CondA_REG_TOP_City2Foggy_VGG16_ALPHA0.2_WEAK_SUP_FROM_SCRATCH/model_best.pth' # Initialed by pretrained weight
   #
-  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/pretrained/grad_clip/Cityscapes_ga_initlr_0.02_lr_decay_grad_clip/model_final.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/pretrained/grad_clip/Cityscapes_ga_initlr_0.02_lr_decay_grad_clip/model_final.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/pretrained/grad_clip/Cityscapes_ga_initlr_0.02_lr_decay_grad_clip/best_model/cityscapes_foggy_val_cocostyle/best_model.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+# WEIGHT: "/home/jayeon/Documents/MLVU/EveryPixelMatters/training_dir/Cityscapes_teacher_2.0_post_thr_0.5_ema_annealing_0.9999_initlr_0.02_cond_separate_best_init/best_model/cityscapes_foggy_val_cocostyle/teacher_best_model.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/pretrained/grad_clip/Cityscapes_ga_initlr_0.02_lr_decay_grad_clip/best_model/cityscapes_foggy_val_cocostyle/best_model.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/training_dir/oracle/model_best.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+  WEIGHT: "/home/jayeon/Documents/MLVU/EveryPixelMatters/training_dir/GA_CondA_REG_SEPERATE_LEFT_TOP_CS2Foggy_VGG16_SMOOTH_ALPHA0.2_2/model_final.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/training_dir/GA_CA_City2Foggy_VGG16_lr0.02/model_best.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/training_dir/oracle/model_best.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/training_dir/source-only/model_best.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
   #
   RPN_ONLY: True
   FCOS_ON: True
@@ -29,10 +38,11 @@ MODEL:
     COND_EXPAND: 0
     COND_SMOOTH: True
     COND_WARMUP_ITER: 6000
-    COND_ALPHA: 0.0
+    COND_ALPHA: 0.2
+    COND_CONF: 0.3
     COND_CLASS: False
     COND_REG:
-      LEFT: False
+      LEFT: True
       TOP: True
     #
     GA_DIS_LAMBDA: 0.01
@@ -98,7 +108,7 @@ MODEL:
 TEST:
   DETECTIONS_PER_IMG: 100 # fpn_post_nms_top_n  (default=100)
 DATASETS:
-  TRAIN_SOURCE: ("cityscapes_foggy_train_cocostyle", )
+  TRAIN_SOURCE: ("cityscapes_train_cocostyle", )
   TRAIN_TARGET: ("cityscapes_foggy_train_cocostyle", )
   TEST: ("cityscapes_foggy_val_cocostyle", )
 INPUT:
@@ -111,7 +121,7 @@ DATALOADER:
 SOLVER:
   WEIGHT_DECAY: 0.0001
   MAX_ITER: 20000
-  IMS_PER_BATCH: 8
+  IMS_PER_BATCH: 16
   CHECKPOINT_PERIOD: 500
   #
   BACKBONE:

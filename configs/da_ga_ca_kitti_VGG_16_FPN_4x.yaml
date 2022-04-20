@@ -1,8 +1,9 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  # WEIGHT: 'https://s3.ap-northeast-2.amazonaws.com/open-mmlab/pretrain/third_party/vgg16_caffe-292e1171.pth' # Initialed by pretrained weight
-  #
-  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/pretrained/grad_clip/KITTI_ga_initlr_0.005_grad_clip/model_final.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+  WEIGHT: '/home/jayeon/Documents/EveryPixelMatters/pretrained/vgg16_caffe-292e1171.pth' # Initialed by pretrained weight
+#  WEIGHT:
+#  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/pretrained/grad_clip/KITTI_ga_initlr_0.005_grad_clip/model_final.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+# WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/training_dir/SourceOnly_KITTI_VGG16/model_final.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
   #
   RPN_ONLY: True
   FCOS_ON: True
@@ -31,11 +32,12 @@ MODEL:
     COND_ALPHA: 0.2
     COND_CLASS: False
     COND_REG:
-      LEFT: False
+      LEFT: True
       TOP: True
     #
-    GA_DIS_LAMBDA: 0.1
+    GA_DIS_LAMBDA: 0.01
     CA_DIS_LAMBDA: 0.1
+    COND_DIS_LAMBDA: 0.1
     GRL_APPLIED_DOMAIN: 'both'
     #
     USE_DIS_P7: True
@@ -94,9 +96,9 @@ DATALOADER:
   SIZE_DIVISIBILITY: 32
 SOLVER:
   WEIGHT_DECAY: 0.0001
-  MAX_ITER: 10000
+  MAX_ITER: 20000
   IMS_PER_BATCH: 16
-  CHECKPOINT_PERIOD: 250
+  CHECKPOINT_PERIOD: 500
   #
   BACKBONE:
     BASE_LR: 0.005

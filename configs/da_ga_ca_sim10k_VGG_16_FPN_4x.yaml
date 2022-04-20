@@ -1,8 +1,15 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  # WEIGHT: 'https://s3.ap-northeast-2.amazonaws.com/open-mmlab/pretrain/third_party/vgg16_caffe-292e1171.pth' # Initialed by pretrained weight
-  #
-  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/pretrained/grad_clip/Sim10k_ga_initlr_0.01_lr_decay_grad_clip/model_final.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: '/home/jayeon/Documents/EveryPixelMatters/pretrained/vgg16_caffe-292e1171.pth'
+#  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/pretrained/grad_clip/Sim10k_ga_initlr_0.01_lr_decay_grad_clip/model_final.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/pretrained/grad_clip/Sim10k_ga_initlr_0.01_lr_decay_grad_clip/best_model/cityscapes_val_caronly_cocostyle/best_model.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+# WEIGHT: "/home/jayeon/Documents/EveryPixelMatters/pretrained/Sim10k_ga_ca_initlr_0.01_lr_decay/best_model/cityscapes_val_caronly_cocostyle/best_model.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+# WEIGHT: "/home/jayeon/Documents/MLVU/EveryPixelMatters/training_dir/GA_CondA_REG_TOP_SIM10k_VGG16_SMOOTH_ALPHA0.2_SOFT_PROB_TAU_0.1_WEAK_SUP_FROM_SCRATCH/model_best.pth" # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: '/home/jayeon/Documents/EveryPixelMatters/training_dir/SourceOnly_SIM10k2CS_VGG16/model_best.pth' # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: '/home/jayeon/Documents/MLVU/EveryPixelMatters/training_dir/GA_CondA_REG_LEFT_SIM10k_VGG16_SMOOTH_ALPHA0.2_SOFT_PROB_TAU_0.1_WEAK_SUP_CF0.5/model_best.pth' # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: '/home/jayeon/Documents/EveryPixelMatters/training_dir/Oracle_Sim10k/model_best.pth' # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+  WEIGHT: '/home/jayeon/Documents/MLVU/EveryPixelMatters/training_dir/GA_CondA_REG_SEPERATE_LEFT_TOP_SIM10k_VGG16_SMOOTH_ALPHA0.2_CF0.5/model_best.pth' # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
+#  WEIGHT: '/home/jayeon/Documents/MLVU/EveryPixelMatters/training_dir/GA_CA_CondA_REG_SIM10k_2/model_best.pth' # Initialed by GA pretrained weight (Optimizer and scheduler should not be loaded)
   #
   RPN_ONLY: True
   FCOS_ON: True
@@ -19,9 +26,9 @@ MODEL:
   ADV:
     #
     SEPERATE_DIS: True
-    USE_DIS_GLOBAL: True
+    USE_DIS_GLOBAL: False
     USE_DIS_CENTER_AWARE: False
-    USE_DIS_CONDITIONAL: True
+    USE_DIS_CONDITIONAL: False
     CENTER_AWARE_WEIGHT: 20
     CENTER_AWARE_TYPE: "ca_feature" # or "ca_loss"
     #
@@ -29,6 +36,7 @@ MODEL:
     COND_SMOOTH: True
     COND_WARMUP_ITER: 6000
     COND_ALPHA: 0.2
+    COND_CONF: 0.7
     COND_CLASS: False
     COND_REG:
       LEFT: False
@@ -83,13 +91,13 @@ MODEL:
 TEST:
   DETECTIONS_PER_IMG: 100 # fpn_post_nms_top_n  (default=100)
 DATASETS:
-  TRAIN_SOURCE: ("sim10k_trainval_caronly", ) 
+  TRAIN_SOURCE: ("sim10k_trainval_caronly", )
   TRAIN_TARGET: ("cityscapes_train_caronly_cocostyle", )
   TEST: ("cityscapes_val_caronly_cocostyle", )
 INPUT:
   MIN_SIZE_RANGE_TRAIN: (640, 800)
   MAX_SIZE_TRAIN: 1333
-  MIN_SIZE_TEST: 800
+  MIN_SIZE_TEST: 600
   MAX_SIZE_TEST: 1333
 DATALOADER:
   SIZE_DIVISIBILITY: 32
