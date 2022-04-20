@@ -315,8 +315,17 @@ def evaluate_predictions_on_coco(
 
     coco_dt = coco_gt.loadRes(str(json_result_file)) if coco_results else COCO()
 
-    # coco_dt = coco_gt.loadRes(coco_results)
+    # # categories = {1: 'person', 2: 'car', 3: 'train', 4: 'rider', 5: 'truck', 6: 'motorcycle', 7: 'bicycle', 8: 'bus'}
+    categories = {'person': 1, 'rider': 4, 'car': 2, 'truck': 5, 'bus': 8, 'train': 3, 'mbike': 6, 'bicycle': 7}
+    # # coco_dt = coco_gt.loadRes(coco_results)
     coco_eval = COCOeval(coco_gt, coco_dt, iou_type)
+    for cat in categories.keys():
+       print('******{}******'.format(cat))
+       coco_eval.params.catIds = [categories[cat]]
+       coco_eval.evaluate()
+       coco_eval.accumulate()
+       coco_eval.summarize()
+
     coco_eval.evaluate()
     coco_eval.accumulate()
     coco_eval.summarize()

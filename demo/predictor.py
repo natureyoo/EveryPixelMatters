@@ -4,6 +4,8 @@ import torch
 from torchvision import transforms as T
 
 from fcos_core.modeling.detector import build_detection_model
+from fcos_core.modeling.backbone import build_backbone
+from fcos_core.modeling.rpn.rpn import build_rpn
 from fcos_core.utils.checkpoint import DetectronCheckpointer
 from fcos_core.structures.image_list import to_image_list
 from fcos_core.modeling.roi_heads.mask_head.inference import Masker
@@ -270,7 +272,7 @@ class COCODemo(object):
             box = box.to(torch.int64)
             top_left, bottom_right = box[:2].tolist(), box[2:].tolist()
             image = cv2.rectangle(
-                image, tuple(top_left), tuple(bottom_right), tuple(color), 2
+                image, tuple(top_left), tuple(bottom_right), tuple([0,255,0]), 2
             )
 
         return image
@@ -360,20 +362,106 @@ class COCODemo(object):
         labels = predictions.get_field("labels").tolist()
         labels = [self.CATEGORIES[i] for i in labels]
         boxes = predictions.bbox
-
+        # image_ = image.copy()
         template = "{}: {:.2f}"
         for box, score, label in zip(boxes, scores, labels):
             x, y = box[:2]
-            s = template.format(label, score)
+            # s = template.format(label, score)
+            s = label
             cv2.putText(
-                image, s, (x, y), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 255, 255), 1
+                image, s, (int(x+0.5), int(y-5.0)), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 255, 255), 1
             )
 
         return image
 
+
+class CSDemo(COCODemo):
+    def __init__(
+        self,
+        cfg,
+        confidence_thresholds_for_classes,
+        show_mask_heatmaps=False,
+        masks_per_dim=2,
+        min_image_size=224,
+    ):
+        # self.CATEGORIES = ['__background', 'Person', 'Car', 'Train', 'Rider', 'Truck', 'Motorcycle', 'Bicycle', 'Bus']
+        self.CATEGORIES = ['__background', 'Car']
+        self.confidence_thresholds_for_classes = torch.tensor(confidence_thresholds_for_classes)
+        self.cfg = cfg.clone()
+        self.min_image_size = min_image_size
+        self.model = {}
+        self.device = torch.device(cfg.MODEL.DEVICE)
+
+        backbone = build_backbone(cfg).to(self.device).eval()
+        fcos = build_rpn(cfg, backbone.out_channels).to(self.device).eval()
+        self.model["backbone"] = backbone
+        self.model["fcos"] = fcos
+        save_dir = cfg.OUTPUT_DIR
+        checkpointer = DetectronCheckpointer(cfg, self.model, save_dir=save_dir)
+        _ = checkpointer.load(cfg.MODEL.WEIGHT)
+
+        self.transforms = self.build_transform()
+
+        mask_threshold = -1 if show_mask_heatmaps else 0.5
+        self.masker = Masker(threshold=mask_threshold, padding=1)
+
+        # used to make colors for each class
+        self.palette = torch.tensor([2 ** 25 - 1, 2 ** 15 - 1, 2 ** 21 - 1])
+
+        self.cpu_device = torch.device("cpu")
+        self.confidence_thresholds_for_classes = torch.tensor(confidence_thresholds_for_classes)
+        self.show_mask_heatmaps = show_mask_heatmaps
+        self.masks_per_dim = masks_per_dim
+
+        # super().__init__(cfg, confidence_thresholds_for_classes, show_mask_heatmaps, masks_per_dim, min_image_size)
+
+    def compute_prediction(self, original_image):
+        """
+        Arguments:
+            original_image (np.ndarray): an image as returned by OpenCV
+
+        Returns:
+            prediction (BoxList): the detected objects. Additional information
+                of the detection properties can be found in the fields of
+                the BoxList via `prediction.fields()`
+        """
+        # apply pre-processing to image
+        image = self.transforms(original_image)
+        # convert to an ImageList, padded so that it is divisible by
+        # cfg.DATALOADER.SIZE_DIVISIBILITY
+        image_list = to_image_list(image, self.cfg.DATALOADER.SIZE_DIVISIBILITY)
+        image_list = image_list.to(self.device)
+        # compute predictions
+
+        model_backbone = self.model["backbone"]
+        model_fcos = self.model["fcos"]
+
+        with torch.no_grad():
+            features = model_backbone(image_list.tensors)
+            predictions, _, _ = model_fcos(
+                image_list, features, targets=None, return_maps=False)
+        predictions = [o.to(self.cpu_device) for o in predictions]
+        # always single image is passed at a time
+        prediction = predictions[0]
+
+        # reshape prediction (a BoxList) into the original image size
+        height, width = original_image.shape[:-1]
+        prediction = prediction.resize((width, height))
+
+        if prediction.has_field("mask"):
+            # if we have masks, paste the masks in the right position
+            # in the image, as defined by the bounding boxes
+            masks = prediction.get_field("mask")
+            # always single image is passed at a time
+            masks = self.masker([masks], [prediction])[0]
+            prediction.add_field("mask", masks)
+        return prediction
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 from fcos_core.structures.keypoint import PersonKeypoints
+
 
 def vis_keypoints(img, kps, kp_thresh=2, alpha=0.7):
     """Visualizes keypoints (adapted from vis_one_image).

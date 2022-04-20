@@ -31,6 +31,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 def train(cfg, local_rank, distributed):
+    print('MLVU train_net_da!!!!!!!!!!!!!!!!!!')
     writer = SummaryWriter('runs/{}'.format(cfg.OUTPUT_DIR))
     ##########################################################################
     ############################# Initial Model ##############################
@@ -107,63 +108,118 @@ def train(cfg, local_rank, distributed):
 
     if cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
         if cfg.MODEL.ADV.USE_DIS_P7:
-            dis_P7_Cond = FCOSDiscriminator_CondA(
+            dis_P7_Cond_l = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P7_NUM_CONVS,
                 grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P7,
                 center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
                 grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
                 class_align=cfg.MODEL.ADV.COND_CLASS,
-                reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
-                reg_top_align=cfg.MODEL.ADV.COND_REG.TOP,
+                reg_left_align=True,
+                reg_top_align=False,
+                expand_dim=cfg.MODEL.ADV.COND_EXPAND,
+                level='P7').to(device)
+            dis_P7_Cond_t = FCOSDiscriminator_CondA(
+                num_convs=cfg.MODEL.ADV.COND_DIS_P7_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P7,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
+                class_align=cfg.MODEL.ADV.COND_CLASS,
+                reg_left_align=False,
+                reg_top_align=True,
                 expand_dim=cfg.MODEL.ADV.COND_EXPAND,
                 level='P7').to(device)
         if cfg.MODEL.ADV.USE_DIS_P6:
-            dis_P6_Cond = FCOSDiscriminator_CondA(
+            dis_P6_Cond_l = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P6_NUM_CONVS,
                 grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P6,
                 center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
                 grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
                 class_align=cfg.MODEL.ADV.COND_CLASS,
-                reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
-                reg_top_align=cfg.MODEL.ADV.COND_REG.TOP,
+                reg_left_align=True,
+                reg_top_align=False,
+                expand_dim=cfg.MODEL.ADV.COND_EXPAND,
+                level='P6').to(device)
+            dis_P6_Cond_t = FCOSDiscriminator_CondA(
+                num_convs=cfg.MODEL.ADV.COND_DIS_P6_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P6,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
+                class_align=cfg.MODEL.ADV.COND_CLASS,
+                reg_left_align=False,
+                reg_top_align=True,
                 expand_dim=cfg.MODEL.ADV.COND_EXPAND,
                 level='P6').to(device)
         if cfg.MODEL.ADV.USE_DIS_P5:
-            dis_P5_Cond = FCOSDiscriminator_CondA(
+            dis_P5_Cond_l = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P5_NUM_CONVS,
                 grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P5,
                 center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
                 grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
                 class_align=cfg.MODEL.ADV.COND_CLASS,
-                reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
-                reg_top_align=cfg.MODEL.ADV.COND_REG.TOP,
+                reg_left_align=True,
+                reg_top_align=False,
+                expand_dim=cfg.MODEL.ADV.COND_EXPAND,
+                level='P5').to(device)
+            dis_P5_Cond_t = FCOSDiscriminator_CondA(
+                num_convs=cfg.MODEL.ADV.COND_DIS_P5_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P5,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
+                class_align=cfg.MODEL.ADV.COND_CLASS,
+                reg_left_align=False,
+                reg_top_align=True,
                 expand_dim=cfg.MODEL.ADV.COND_EXPAND,
                 level='P5').to(device)
         if cfg.MODEL.ADV.USE_DIS_P4:
-            dis_P4_Cond = FCOSDiscriminator_CondA(
+            dis_P4_Cond_l = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P4_NUM_CONVS,
                 grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P4,
                 center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
                 grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
                 class_align=cfg.MODEL.ADV.COND_CLASS,
-                reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
-                reg_top_align=cfg.MODEL.ADV.COND_REG.TOP,
+                reg_left_align=True,
+                reg_top_align=False,
+                expand_dim=cfg.MODEL.ADV.COND_EXPAND,
+                level='P4').to(device)
+            dis_P4_Cond_t = FCOSDiscriminator_CondA(
+                num_convs=cfg.MODEL.ADV.COND_DIS_P4_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P4,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
+                class_align=cfg.MODEL.ADV.COND_CLASS,
+                reg_left_align=False,
+                reg_top_align=True,
                 expand_dim=cfg.MODEL.ADV.COND_EXPAND,
                 level='P4').to(device)
         if cfg.MODEL.ADV.USE_DIS_P3:
-            dis_P3_Cond = FCOSDiscriminator_CondA(
+            dis_P3_Cond_l = FCOSDiscriminator_CondA(
                 num_convs=cfg.MODEL.ADV.COND_DIS_P3_NUM_CONVS,
                 grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P3,
                 center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
                 # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
                 grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
                 class_align=cfg.MODEL.ADV.COND_CLASS,
-                reg_left_align=cfg.MODEL.ADV.COND_REG.LEFT,
-                reg_top_align=cfg.MODEL.ADV.COND_REG.TOP,
+                reg_left_align=True,
+                reg_top_align=False,
+                expand_dim=cfg.MODEL.ADV.COND_EXPAND,
+                level='P3').to(device)
+            dis_P3_Cond_t = FCOSDiscriminator_CondA(
+                num_convs=cfg.MODEL.ADV.COND_DIS_P3_NUM_CONVS,
+                grad_reverse_lambda=cfg.MODEL.ADV.COND_GRL_WEIGHT_P3,
+                center_aware_weight=cfg.MODEL.ADV.CENTER_AWARE_WEIGHT,
+                # center_aware_type=cfg.MODEL.ADV.CENTER_AWARE_TYPE,
+                grl_applied_domain=cfg.MODEL.ADV.GRL_APPLIED_DOMAIN,
+                class_align=cfg.MODEL.ADV.COND_CLASS,
+                reg_left_align=False,
+                reg_top_align=True,
                 expand_dim=cfg.MODEL.ADV.COND_EXPAND,
                 level='P3').to(device)
 
@@ -231,15 +287,20 @@ def train(cfg, local_rank, distributed):
 
         if cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
             if cfg.MODEL.ADV.USE_DIS_P7:
-                dis_P7_Cond = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P7_Cond)
+                dis_P7_Cond_l = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P7_Cond_l)
+                dis_P7_Cond_t = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P7_Cond_t)
             if cfg.MODEL.ADV.USE_DIS_P6:
-                dis_P6_Cond = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P6_Cond)
+                dis_P6_Cond_l = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P6_Cond_l)
+                dis_P6_Cond_t = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P6_Cond_t)
             if cfg.MODEL.ADV.USE_DIS_P5:
-                dis_P5_Cond = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P5_Cond)
+                dis_P5_Cond_l = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P5_Cond_l)
+                dis_P5_Cond_t = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P5_Cond_t)
             if cfg.MODEL.ADV.USE_DIS_P4:
-                dis_P4_Cond = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P4_Cond)
+                dis_P4_Cond_l = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P4_Cond_l)
+                dis_P4_Cond_t = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P4_Cond_t)
             if cfg.MODEL.ADV.USE_DIS_P3:
-                dis_P3_Cond = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P3_Cond)
+                dis_P3_Cond_l = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P3_Cond_l)
+                dis_P3_Cond_t = torch.nn.SyncBatchNorm.convert_sync_batchnorm(dis_P3_Cond_t)
 
         if cfg.MODEL.ADV.USE_DIS_HEAD:
             if cfg.MODEL.ADV.USE_DIS_P7:
@@ -286,15 +347,20 @@ def train(cfg, local_rank, distributed):
 
     if cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
         if cfg.MODEL.ADV.USE_DIS_P7:
-            optimizer["dis_P7_Cond"] = make_optimizer(cfg, dis_P7_Cond, name='discriminator')
+            optimizer["dis_P7_Cond"] = make_optimizer(cfg, dis_P7_Cond_l, name='discriminator')
+            optimizer["dis_P7_Cond_t"] = make_optimizer(cfg, dis_P7_Cond_t, name='discriminator')
         if cfg.MODEL.ADV.USE_DIS_P6:
-            optimizer["dis_P6_Cond"] = make_optimizer(cfg, dis_P6_Cond, name='discriminator')
+            optimizer["dis_P6_Cond"] = make_optimizer(cfg, dis_P6_Cond_l, name='discriminator')
+            optimizer["dis_P6_Cond_t"] = make_optimizer(cfg, dis_P6_Cond_t, name='discriminator')
         if cfg.MODEL.ADV.USE_DIS_P5:
-            optimizer["dis_P5_Cond"] = make_optimizer(cfg, dis_P5_Cond, name='discriminator')
+            optimizer["dis_P5_Cond"] = make_optimizer(cfg, dis_P5_Cond_l, name='discriminator')
+            optimizer["dis_P5_Cond_t"] = make_optimizer(cfg, dis_P5_Cond_t, name='discriminator')
         if cfg.MODEL.ADV.USE_DIS_P4:
-            optimizer["dis_P4_Cond"] = make_optimizer(cfg, dis_P4_Cond, name='discriminator')
+            optimizer["dis_P4_Cond"] = make_optimizer(cfg, dis_P4_Cond_l, name='discriminator')
+            optimizer["dis_P4_Cond_t"] = make_optimizer(cfg, dis_P4_Cond_t, name='discriminator')
         if cfg.MODEL.ADV.USE_DIS_P3:
-            optimizer["dis_P3_Cond"] = make_optimizer(cfg, dis_P3_Cond, name='discriminator')
+            optimizer["dis_P3_Cond"] = make_optimizer(cfg, dis_P3_Cond_l, name='discriminator')
+            optimizer["dis_P3_Cond_t"] = make_optimizer(cfg, dis_P3_Cond_t, name='discriminator')
 
     if cfg.MODEL.ADV.USE_DIS_HEAD:
         if cfg.MODEL.ADV.USE_DIS_P7:
@@ -339,14 +405,19 @@ def train(cfg, local_rank, distributed):
     if cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
         if cfg.MODEL.ADV.USE_DIS_P7:
             scheduler["dis_P7_Cond"] = make_lr_scheduler(cfg, optimizer["dis_P7_Cond"], name='discriminator')
+            scheduler["dis_P7_Cond_t"] = make_lr_scheduler(cfg, optimizer["dis_P7_Cond_t"], name='discriminator')
         if cfg.MODEL.ADV.USE_DIS_P6:
             scheduler["dis_P6_Cond"] = make_lr_scheduler(cfg, optimizer["dis_P6_Cond"], name='discriminator')
+            scheduler["dis_P6_Cond_t"] = make_lr_scheduler(cfg, optimizer["dis_P6_Cond_t"], name='discriminator')
         if cfg.MODEL.ADV.USE_DIS_P5:
             scheduler["dis_P5_Cond"] = make_lr_scheduler(cfg, optimizer["dis_P5_Cond"], name='discriminator')
+            scheduler["dis_P5_Cond_t"] = make_lr_scheduler(cfg, optimizer["dis_P5_Cond_t"], name='discriminator')
         if cfg.MODEL.ADV.USE_DIS_P4:
             scheduler["dis_P4_Cond"] = make_lr_scheduler(cfg, optimizer["dis_P4_Cond"], name='discriminator')
+            scheduler["dis_P4_Cond_t"] = make_lr_scheduler(cfg, optimizer["dis_P4_Cond_t"], name='discriminator')
         if cfg.MODEL.ADV.USE_DIS_P3:
             scheduler["dis_P3_Cond"] = make_lr_scheduler(cfg, optimizer["dis_P3_Cond"], name='discriminator')
+            scheduler["dis_P3_Cond_t"] = make_lr_scheduler(cfg, optimizer["dis_P3_Cond_t"], name='discriminator')
 
     if cfg.MODEL.ADV.USE_DIS_HEAD:
         if cfg.MODEL.ADV.USE_DIS_P7:
@@ -441,32 +512,57 @@ def train(cfg, local_rank, distributed):
 
         if cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
             if cfg.MODEL.ADV.USE_DIS_P7:
-                dis_P7_Cond = torch.nn.parallel.DistributedDataParallel(
-                    dis_P7_Cond, device_ids=[local_rank], output_device=local_rank,
+                dis_P7_Cond_l = torch.nn.parallel.DistributedDataParallel(
+                    dis_P7_Cond_l, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+                dis_P7_Cond_t = torch.nn.parallel.DistributedDataParallel(
+                    dis_P7_Cond_t, device_ids=[local_rank], output_device=local_rank,
                     # this should be removed if we update BatchNorm stats
                     broadcast_buffers=False
                 )
             if cfg.MODEL.ADV.USE_DIS_P6:
-                dis_P6_Cond = torch.nn.parallel.DistributedDataParallel(
-                    dis_P6_Cond, device_ids=[local_rank], output_device=local_rank,
+                dis_P6_Cond_l = torch.nn.parallel.DistributedDataParallel(
+                    dis_P6_Cond_l, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+                dis_P6_Cond_t = torch.nn.parallel.DistributedDataParallel(
+                    dis_P6_Cond_t, device_ids=[local_rank], output_device=local_rank,
                     # this should be removed if we update BatchNorm stats
                     broadcast_buffers=False
                 )
             if cfg.MODEL.ADV.USE_DIS_P5:
-                dis_P5_Cond = torch.nn.parallel.DistributedDataParallel(
-                    dis_P5_Cond, device_ids=[local_rank], output_device=local_rank,
+                dis_P5_Cond_l = torch.nn.parallel.DistributedDataParallel(
+                    dis_P5_Cond_l, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+                dis_P5_Cond_t = torch.nn.parallel.DistributedDataParallel(
+                    dis_P5_Cond_t, device_ids=[local_rank], output_device=local_rank,
                     # this should be removed if we update BatchNorm stats
                     broadcast_buffers=False
                 )
             if cfg.MODEL.ADV.USE_DIS_P4:
-                dis_P4_Cond = torch.nn.parallel.DistributedDataParallel(
-                    dis_P4_Cond, device_ids=[local_rank], output_device=local_rank,
+                dis_P4_Cond_l = torch.nn.parallel.DistributedDataParallel(
+                    dis_P4_Cond_l, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+                dis_P4_Cond_t = torch.nn.parallel.DistributedDataParallel(
+                    dis_P4_Cond_t, device_ids=[local_rank], output_device=local_rank,
                     # this should be removed if we update BatchNorm stats
                     broadcast_buffers=False
                 )
             if cfg.MODEL.ADV.USE_DIS_P3:
-                dis_P3_Cond = torch.nn.parallel.DistributedDataParallel(
-                    dis_P3_Cond, device_ids=[local_rank], output_device=local_rank,
+                dis_P3_Cond_l = torch.nn.parallel.DistributedDataParallel(
+                    dis_P3_Cond_l, device_ids=[local_rank], output_device=local_rank,
+                    # this should be removed if we update BatchNorm stats
+                    broadcast_buffers=False
+                )
+                dis_P3_Cond_t = torch.nn.parallel.DistributedDataParallel(
+                    dis_P3_Cond_t, device_ids=[local_rank], output_device=local_rank,
                     # this should be removed if we update BatchNorm stats
                     broadcast_buffers=False
                 )
@@ -535,15 +631,20 @@ def train(cfg, local_rank, distributed):
 
     if cfg.MODEL.ADV.USE_DIS_CONDITIONAL:
         if cfg.MODEL.ADV.USE_DIS_P7:
-            model["dis_P7_Cond"] = dis_P7_Cond
+            model["dis_P7_Cond"] = dis_P7_Cond_l
+            model["dis_P7_Cond_t"] = dis_P7_Cond_t
         if cfg.MODEL.ADV.USE_DIS_P6:
-            model["dis_P6_Cond"] = dis_P6_Cond
+            model["dis_P6_Cond"] = dis_P6_Cond_l
+            model["dis_P6_Cond_t"] = dis_P6_Cond_t
         if cfg.MODEL.ADV.USE_DIS_P5:
-            model["dis_P5_Cond"] = dis_P5_Cond
+            model["dis_P5_Cond"] = dis_P5_Cond_l
+            model["dis_P5_Cond_t"] = dis_P5_Cond_t
         if cfg.MODEL.ADV.USE_DIS_P4:
-            model["dis_P4_Cond"] = dis_P4_Cond
+            model["dis_P4_Cond"] = dis_P4_Cond_l
+            model["dis_P4_Cond_t"] = dis_P4_Cond_t
         if cfg.MODEL.ADV.USE_DIS_P3:
-            model["dis_P3_Cond"] = dis_P3_Cond
+            model["dis_P3_Cond"] = dis_P3_Cond_l
+            model["dis_P3_Cond_t"] = dis_P3_Cond_t
 
     if cfg.MODEL.ADV.USE_DIS_HEAD:
         if cfg.MODEL.ADV.USE_DIS_P7:
@@ -609,22 +710,23 @@ def train(cfg, local_rank, distributed):
     checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
 
     seperate_dis = cfg.MODEL.ADV.SEPERATE_DIS
-    
-    do_train(
-        model,
-        data_loader,
-        optimizer,
-        scheduler,
-        checkpointer,
-        device,
-        checkpoint_period,
-        arguments,
-        cfg,
-        run_test,
-        distributed,
-        writer,
-        seperate_dis
-    )
+
+    with torch.no_grad():
+        do_train(
+            model,
+            data_loader,
+            optimizer,
+            scheduler,
+            checkpointer,
+            device,
+            checkpoint_period,
+            arguments,
+            cfg,
+            run_test,
+            distributed,
+            writer,
+            seperate_dis
+        )
 
     return model
 

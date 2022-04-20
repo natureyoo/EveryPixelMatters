@@ -15,7 +15,6 @@ from fcos_core.structures.image_list import to_image_list
 def foward_detector(model, images, targets=None, return_maps=False):
     map_layer_to_index = {"P3": 0, "P4": 1, "P5": 2, "P6": 3, "P7": 4}
     feature_layers = map_layer_to_index.keys()
-
     model_backbone = model["backbone"]
     model_fcos = model["fcos"]
 
@@ -184,7 +183,7 @@ def do_train(
         writer.add_scalar('Loss_FCOS/reg_gs', loss_dict['loss_reg_gs'], iteration)
         writer.add_scalar('Loss_FCOS/centerness_gs', loss_dict['loss_centerness_gs'], iteration)
 
-        losses.backward(retain_graph=True)
+        # losses.backward(retain_graph=True)
         del loss_dict, losses
 
         ##########################################################################
@@ -205,9 +204,13 @@ def do_train(
                     loss_dict["loss_adv_%s_CA_ds" % layer] = \
                         ca_dis_lambda * model["dis_%s_CA" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source')
                 if USE_DIS_CONDITIONAL:
-                    loss_dict["loss_adv_%s_Cond_ds" %layer], stat["%s_source" % layer] = \
+                    loss_cond_l, cur_stat, idx = \
                         model["dis_%s_Cond" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha, labels=labels[int(layer[1])-3], reg_targets=reg_targets[int(layer[1])-3], conf_th=cf_th)
-                    loss_dict["loss_adv_%s_Cond_ds" %layer] *= cond_dis_lambda
+                    stat["%s_source_left" % layer] = [s / idx for s in cur_stat]
+                    loss_cond_t, cur_idx, idx = \
+                        model["dis_%s_Cond_t" % layer](features_s[layer], source_label, score_maps_s[layer], domain='source', alpha=alpha, labels=labels[int(layer[1])-3], reg_targets=reg_targets[int(layer[1])-3], conf_th=cf_th)
+                    stat["%s_source_top" % layer] = [s / idx for s in cur_stat]
+                    loss_dict["loss_adv_%s_Cond_ds" %layer] = cond_dis_lambda * (loss_cond_l + loss_cond_t)
                 if USE_DIS_HEAD:
                     loss_dict["loss_adv_%s_HA_ds" % layer] = \
                         ha_dis_lambda * model["dis_%s_HA" % layer](source_label, score_maps_s[layer], domain='source')
@@ -247,8 +250,9 @@ def do_train(
             writer.add_scalar('Loss_DISC/P6_Cond_ds', loss_dict['loss_adv_P6_Cond_ds'], iteration)
             writer.add_scalar('Loss_DISC/P7_Cond_ds', loss_dict['loss_adv_P7_Cond_ds'], iteration)
             for layer in used_feature_layers:
-                for i in range(4):
-                    writer.add_scalar('Stat/{}/Source_{}'.format(layer, i), stat['%s_source' % layer][i], iteration)
+                for i in range(3):
+                    writer.add_scalar('Stat/{}/Source_{}_left'.format(layer, i), stat['%s_source_left' % layer][i], iteration)
+                    writer.add_scalar('Stat/{}/Source_{}_top'.format(layer, i), stat['%s_source_top' % layer][i], iteration)
         if USE_DIS_HEAD:
             writer.add_scalar('Loss_DISC/P3_HA_ds', loss_dict['loss_adv_P3_HA_ds'], iteration)
             writer.add_scalar('Loss_DISC/P4_HA_ds', loss_dict['loss_adv_P4_HA_ds'], iteration)
@@ -261,7 +265,7 @@ def do_train(
         losses_reduced = sum(loss for loss in loss_dict_reduced.values())
         meters.update(loss_ds=losses_reduced, **loss_dict_reduced)
 
-        losses.backward()
+        # losses.backward()
         del loss_dict, losses
 
         ##########################################################################
@@ -276,7 +280,7 @@ def do_train(
             # detatch score_map
             for map_type in score_maps_t[layer]:
                 score_maps_t[layer][map_type] = score_maps_t[layer][map_type].detach()
-            if  seperate_dis:
+            if seperate_dis:
                 if USE_DIS_GLOBAL:
                     loss_dict["loss_adv_%s_dt" % layer] = \
                         ga_dis_lambda * model["dis_%s" % layer](features_t[layer], target_label, domain='target')
@@ -284,9 +288,13 @@ def do_train(
                     loss_dict["loss_adv_%s_CA_dt" %layer] = \
                         ca_dis_lambda * model["dis_%s_CA" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target')
                 if USE_DIS_CONDITIONAL:
-                    loss_dict["loss_adv_%s_Cond_dt" %layer], stat["%s_target" % layer] = \
+                    loss_cond_l, cur_stat, idx = \
                          model["dis_%s_Cond" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target', alpha=alpha, conf_th=cf_th)
-                    loss_dict["loss_adv_%s_Cond_dt" % layer] *= cond_dis_lambda
+                    stat["%s_target_left" % layer] = [s / idx for s in cur_stat]
+                    loss_cond_t, cur_stat, idx = \
+                        model["dis_%s_Cond_t" % layer](features_t[layer], target_label, score_maps_t[layer], domain='target', alpha=alpha, conf_th=cf_th)
+                    stat["%s_target_top" % layer] = [s / idx for s in cur_stat]
+                    loss_dict["loss_adv_%s_Cond_dt" % layer] = cond_dis_lambda * (loss_cond_l + loss_cond_t)
                 if USE_DIS_HEAD:
                     loss_dict["loss_adv_%s_HA_dt" %layer] = \
                         ha_dis_lambda * model["dis_%s_HA" % layer](target_label, score_maps_t[layer], domain='target')
@@ -329,8 +337,9 @@ def do_train(
             writer.add_scalar('Loss_DISC/P6_Cond_dt', loss_dict['loss_adv_P6_Cond_dt'], iteration)
             writer.add_scalar('Loss_DISC/P7_Cond_dt', loss_dict['loss_adv_P7_Cond_dt'], iteration)
             for layer in used_feature_layers:
-                for i in range(4):
-                    writer.add_scalar('Stat/{}/Target_{}'.format(layer, i), stat['%s_target' % layer][i], iteration)
+                for i in range(3):
+                    writer.add_scalar('Stat/{}/Target_{}_left'.format(layer, i), stat['%s_target_left' % layer][i], iteration)
+                    writer.add_scalar('Stat/{}/Target_{}_top'.format(layer, i), stat['%s_target_top' % layer][i], iteration)
 
         if USE_DIS_HEAD:
             writer.add_scalar('Loss_DISC/P3_HA_dt', loss_dict['loss_adv_P3_HA_dt'], iteration)
@@ -347,30 +356,30 @@ def do_train(
         losses_reduced = sum(loss for loss in loss_dict_reduced.values())
         meters.update(loss_dt=losses_reduced, **loss_dict_reduced)
 
-        # saved GRL gradient
-        grad_list = []
-        for layer in used_feature_layers:
-            def save_grl_grad(grad):
-                grad_list.append(grad)
-            features_t[layer].register_hook(save_grl_grad)
-
-        losses.backward()
-
-        ##########################################################################
-        ##########################################################################
-        ##########################################################################
-        max_norm = 5
-        for k in model:
-            torch.nn.utils.clip_grad_norm_(model[k].parameters(), max_norm)
-
-        # optimizer.step()
-        for k in optimizer:
-            optimizer[k].step()
-
-        if pytorch_1_1_0_or_later:
-            # scheduler.step()
-            for k in scheduler:
-                scheduler[k].step()
+        # # saved GRL gradient
+        # grad_list = []
+        # for layer in used_feature_layers:
+        #     def save_grl_grad(grad):
+        #         grad_list.append(grad)
+        #     features_t[layer].register_hook(save_grl_grad)
+        #
+        # losses.backward()
+        #
+        # ##########################################################################
+        # ##########################################################################
+        # ##########################################################################
+        # max_norm = 5
+        # for k in model:
+        #     torch.nn.utils.clip_grad_norm_(model[k].parameters(), max_norm)
+        #
+        # # optimizer.step()
+        # for k in optimizer:
+        #     optimizer[k].step()
+        #
+        # if pytorch_1_1_0_or_later:
+        #     # scheduler.step()
+        #     for k in scheduler:
+        #         scheduler[k].step()
 
         # End of training
         batch_time = time.time() - end
