@@ -16,7 +16,7 @@
 # for that, check that `which conda`, `which pip` and `which python` points to the
 # right path. From a clean conda env, this is what you need to do
 
-conda create --name EveryPixelMatters python=3.7
+conda create --name EveryPixelMatters python=3.9
 conda activate EveryPixelMatters
 
 # this installs the right pip and dependencies for the fresh python
@@ -30,7 +30,8 @@ pip install ninja yacs cython matplotlib tqdm tensorboard
 #conda install -c pytorch pytorch=1.3.0 torchvision==0.2.1 cudatoolkit=9.0
 
 # add for CUDA 10.2
-conda install pytorch=1.4.0 torchvision==0.2.1 cudatoolkit=10.2 -c pytorch
+# conda install pytorch=1.4.0 torchvision==0.2.1 cudatoolkit=10.2 -c pytorch
+conda install pytorch=1.10.1 torchvision==0.11.2 cudatoolkit=10.2 -c pytorch
 
 export INSTALL_DIR=$PWD
 
