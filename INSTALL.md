@@ -55,6 +55,9 @@ python setup.py build develop
 
 unset INSTALL_DIR
 
+#module 'distutils' has no attribute 'version' : with setuptools 59.6.0
+pip install setuptools==59.5.0
+
 # we need protobuf==3.19.1
 conda install -c anaconda protobuf==3.19.1
 
