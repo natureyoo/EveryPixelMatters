@@ -55,6 +55,9 @@ python setup.py build develop
 
 unset INSTALL_DIR
 
+# we need protobuf==3.19.1
+conda install -c anaconda protobuf==3.19.1
+
 # or if you are on macOS
 # MACOSX_DEPLOYMENT_TARGET=10.9 CC=clang CXX=clang++ python setup.py build develop
 ```
